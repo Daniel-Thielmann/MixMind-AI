@@ -16,7 +16,7 @@ class StorageService:
     Responsible for storing uploaded audio files.
     """
 
-    def save(self, file: UploadFile) -> Path:
+    def save_audio(self, file: UploadFile) -> Path:
         # Ensure the uploaded file has a filename
         if not file.filename:
             raise InvalidAudioFileException("<unknown>")

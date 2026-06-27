@@ -4,7 +4,7 @@ from app.audio.services.analyzer import AudioAnalyzer
 from app.audio.services.converter import AudioConverter
 from app.schemas.api import UploadAnalysisResponse, UploadedTrack
 from app.services.recommendation_service import RecommendationService
-from app.services.storage_service import StorageService, storage_service
+from backend.app.services.infrastructure.storage_service import StorageService, storage_service
 
 
 class AnalysisService:
@@ -28,14 +28,14 @@ class AnalysisService:
         self._analyzer = analyzer or AudioAnalyzer()
         self._recommendation_service = recommendation_service or RecommendationService()
 
-    def upload_tracks(
+    def analyze(
         self,
         track_a: UploadFile,
         track_b: UploadFile,
     ) -> UploadAnalysisResponse:
 
-        path_a = self._storage.save(track_a)
-        path_b = self._storage.save(track_b)
+        path_a = self._storage.save_audio(track_a)
+        path_b = self._storage.save_audio(track_b)
 
         return UploadAnalysisResponse(
             status="success",
