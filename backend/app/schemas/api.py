@@ -1,5 +1,7 @@
 from app.schemas.audio import AudioAnalysis
 from app.schemas.recommendation import CompatibilityResult
+from app.schemas.spectrogram import Spectrograms
+from app.schemas.waveform import Waveforms
 from pydantic import BaseModel, Field
 
 
@@ -18,3 +20,5 @@ class UploadAnalysisResponse(ApiResponse):
     compatibility: CompatibilityResult = Field(
         description="Heuristic compatibility result for the track pair."
     )
+    waveforms: Waveforms = Field(description="Generated waveform images.")
+    spectrograms: Spectrograms = Field(description="Generated spectrogram images.")
