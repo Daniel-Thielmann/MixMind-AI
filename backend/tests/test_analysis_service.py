@@ -3,6 +3,8 @@ from pathlib import Path
 
 from app.schemas.audio import AudioAnalysis
 from app.schemas.recommendation import CompatibilityResult
+from app.schemas.spectrogram import SpectrogramResult
+from app.schemas.waveform import WaveformResult
 from app.services.analysis_service import AnalysisService
 from fastapi import UploadFile
 
@@ -47,6 +49,28 @@ class FakeCompatibilityService:
         )
 
 
+class FakeWaveformGenerator:
+    def __init__(self, output_paths: list[str]) -> None:
+        self._output_paths = output_paths
+        self._index = 0
+
+    def generate(self, audio_path: Path) -> WaveformResult:
+        image_path = self._output_paths[self._index]
+        self._index += 1
+        return WaveformResult(image_path=image_path, width=1200, height=300)
+
+
+class FakeSpectrogramGenerator:
+    def __init__(self, output_paths: list[str]) -> None:
+        self._output_paths = output_paths
+        self._index = 0
+
+    def generate(self, audio_path: Path) -> SpectrogramResult:
+        image_path = self._output_paths[self._index]
+        self._index += 1
+        return SpectrogramResult(image_path=image_path, width=1200, height=500)
+
+
 def test_analysis_service_analyze_builds_complete_response(tmp_path) -> None:
     path_a = tmp_path / "track_a.wav"
     path_b = tmp_path / "track_b.wav"
@@ -54,6 +78,18 @@ def test_analysis_service_analyze_builds_complete_response(tmp_path) -> None:
     service = AnalysisService(
         storage=FakeStorageService(path_a, path_b),
         analyzer=FakeAudioAnalyzer(),
+        waveform_service=FakeWaveformGenerator(
+            [
+                "processed/waveforms/a.png",
+                "processed/waveforms/b.png",
+            ]
+        ),
+        spectrogram_service=FakeSpectrogramGenerator(
+            [
+                "processed/spectrograms/a.png",
+                "processed/spectrograms/b.png",
+            ]
+        ),
         compatibility=FakeCompatibilityService(),
     )
 
@@ -66,3 +102,7 @@ def test_analysis_service_analyze_builds_complete_response(tmp_path) -> None:
     assert response.track_a.filename == "Animals.mp3"
     assert response.track_b.filename == "Spaceman.mp3"
     assert response.compatibility.compatibility_score == 96.0
+    assert response.waveforms.track_a.width == 1200
+    assert response.waveforms.track_b.height == 300
+    assert response.spectrograms.track_a.width == 1200
+    assert response.spectrograms.track_b.height == 500
