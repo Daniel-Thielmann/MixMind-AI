@@ -6,7 +6,10 @@ from app.audio.services.spectrogram import (
     SpectrogramGenerator,
     spectrogram_generator,
 )
-from app.audio.services.waveform import WaveformGenerator, waveform_generator
+from app.audio.services.waveform import (
+    WaveformGenerator,
+    waveform_generator,
+)
 from app.core.config import settings
 from app.schemas.api import AnalysisMetadata, UploadAnalysisResponse
 from app.schemas.spectrogram import Spectrograms
@@ -15,7 +18,10 @@ from app.services.compatibility_service import (
     CompatibilityService,
     compatibility_service,
 )
-from app.services.infrastructure.storage_service import StorageService, storage_service
+from app.services.infrastructure.storage_service import (
+    StorageService,
+    storage_service,
+)
 from fastapi import UploadFile
 
 
@@ -60,14 +66,27 @@ class AnalysisService:
         analysis_b = self._analyzer.analyze(path_b).model_copy(
             update={"filename": track_b.filename or ""}
         )
-        waveform_a = self._waveform_generator.generate(path_a, analysis_id, "a")
-        waveform_b = self._waveform_generator.generate(path_b, analysis_id, "b")
-        spectrogram_a = self._spectrogram_generator.generate(path_a, analysis_id, "a")
-        spectrogram_b = self._spectrogram_generator.generate(path_b, analysis_id, "b")
-        compatibility = self._compatibility.compare(analysis_a, analysis_b)
 
-        waveforms = Waveforms(track_a=waveform_a, track_b=waveform_b)
-        spectrograms = Spectrograms(track_a=spectrogram_a, track_b=spectrogram_b)
+        waveform_a = self._waveform_generator.generate(path_a)
+        waveform_b = self._waveform_generator.generate(path_b)
+
+        spectrogram_a = self._spectrogram_generator.generate(path_a)
+        spectrogram_b = self._spectrogram_generator.generate(path_b)
+
+        compatibility = self._compatibility.compare(
+            analysis_a,
+            analysis_b,
+        )
+
+        waveforms = Waveforms(
+            track_a=waveform_a,
+            track_b=waveform_b,
+        )
+
+        spectrograms = Spectrograms(
+            track_a=spectrogram_a,
+            track_b=spectrogram_b,
+        )
 
         response = UploadAnalysisResponse(
             status="success",
@@ -80,7 +99,10 @@ class AnalysisService:
             spectrograms=spectrograms,
         )
 
-        self._write_analysis_metadata(analysis_id, response)
+        self._write_analysis_metadata(
+            analysis_id,
+            response,
+        )
 
         return response
 
@@ -104,6 +126,7 @@ class AnalysisService:
         analysis_dir.mkdir(parents=True, exist_ok=True)
 
         json_path = analysis_dir / "analysis.json"
+
         json_path.write_text(
             json.dumps(
                 metadata.model_dump(mode="json"),
