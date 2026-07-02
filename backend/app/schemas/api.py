@@ -16,12 +16,17 @@ class UploadAnalysisResponse(ApiResponse):
     """Response returned after analyzing the uploaded tracks."""
 
     analysis_id: str = Field(description="Unique identifier for this analysis session.")
+
     track_a: AudioAnalysis = Field(description="Analysis results for track A.")
+
     track_b: AudioAnalysis = Field(description="Analysis results for track B.")
+
     compatibility: CompatibilityResult = Field(
         description="Heuristic compatibility result for the track pair."
     )
+
     waveforms: Waveforms = Field(description="Generated waveform images.")
+
     spectrograms: Spectrograms = Field(description="Generated spectrogram images.")
 
 
