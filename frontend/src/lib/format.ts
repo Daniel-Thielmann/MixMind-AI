@@ -12,11 +12,7 @@ export function formatEnergy(value: number): string {
 }
 
 export function resolveMediaUrl(imagePath: string): string {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  if (!apiUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
-  }
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
   if (/^https?:\/\//.test(imagePath)) {
     return imagePath;

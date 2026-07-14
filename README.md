@@ -1,22 +1,20 @@
 # 🎧 MixMind
 
-> **AI-powered DJ Track Analysis Platform**
+> **AI-powered DJ Mixing Assistant**
 >
-> Analyze audio tracks, extract musical features and discover the best transitions between songs.
+> Professional audio analysis, transition planning and intelligent DJ recommendations.
 
 <p align="center">
 
-![Python](https://img.shields.io/badge/Python-3.12-blue)
-
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)
-
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-
-![Tests](https://img.shields.io/badge/tests-pytest-success)
-
-![Coverage](https://img.shields.io/badge/coverage-72%25-success)
-
-![Status](https://img.shields.io/badge/status-In%20Development-orange)
+![Tests](https://img.shields.io/badge/tests-158-success)
+![Coverage](https://img.shields.io/badge/coverage-96%25-success)
+![Status](https://img.shields.io/badge/status-v1.0-success)
 
 </p>
 
@@ -32,21 +30,43 @@ This project is being developed as the practical project for the **DCC082 – Si
 
 ---
 
+# Screenshots
+
+## Dashboard
+
+![Dashboard](docs/images/dashboard.png)
+
+## AI Recommendation
+
+![AI Recommendation](docs/images/ai_recommendation.png)
+
+## Track Analysis
+
+![Track Analysis](docs/images/track.png)
+
+---
+
 # Features
 
-Current features include:
-
+- AI-powered DJ track recommendations
+- Professional DJ dashboard
 - Audio upload
-- Audio analysis using Librosa
 - BPM estimation
 - RMS Energy calculation
 - Duration extraction
-- Compatibility Engine
-- REST API with FastAPI
-- Interactive Swagger documentation
+- Waveform generation
+- Spectrogram generation
+- Compatibility Score
+- MixMind Score
+- AI Transition Guide
+- Transition Timeline
+- Radar Chart visualization
+- Interactive waveform/spectrogram viewer
+- REST API (FastAPI)
+- Responsive Next.js frontend
+- Docker support
 - Automated tests
 - Continuous Integration
-- Code Quality Pipeline
 
 ---
 
@@ -84,55 +104,73 @@ Current features include:
 # Architecture
 
 ```text
-                    User
+                                    User
 
-                      │
+                   │
 
-                      ▼
+         Next.js Dashboard
 
-               FastAPI REST API
+                   │
 
-                      │
+          FastAPI REST API
 
-                      ▼
+                   │
 
-              AnalysisService
+        Analysis Pipeline
 
-          ┌───────────┴───────────┐
+      ┌──────────┴──────────┐
 
-          ▼                       ▼
+      ▼                     ▼
 
-   StorageService         AudioAnalyzer
+Audio Analyzer        AI Recommendation
 
-                                  │
+      │                     │
 
-                                  ▼
+      ▼                     ▼
 
-                           Librosa DSP
+ Librosa DSP         OpenRouter LLM
 
-                                  │
+      │                     │
 
-                                  ▼
+      └──────────┬──────────┘
 
-                     CompatibilityService
+                 ▼
 
-                                  │
+         Compatibility Engine
 
-                                  ▼
+                 ▼
 
-                           JSON Response
+         Professional Dashboard
 ```
 
 ---
 
 # Tech Stack
 
+## Frontend
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Recharts
+- Lucide Icons
+
 ## Backend
 
-- Python
+- Python 3.13
 - FastAPI
 - Pydantic
 - Uvicorn
+
+## AI
+
+- OpenRouter
+- LLM Fallback Engine
+- Model Registry
+- Retry Strategy
+- Recommendation Cache
 
 ## Audio Processing
 
@@ -141,19 +179,11 @@ Current features include:
 - SciPy
 - SoundFile
 
-## Testing
-
-- pytest
-- pytest-cov
-
 ## Quality
 
+- Pytest
 - Ruff
 - Black
-- Pre-commit
-
-## CI/CD
-
 - GitHub Actions
 
 ---
@@ -164,29 +194,31 @@ Current features include:
 MixMind-AI/
 
 ├── backend/
+│   ├── app/
+│   │   ├── ai/
+│   │   ├── api/
+│   │   ├── audio/
+│   │   ├── core/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   └── utils/
+│   │
+│   ├── tests/
+│   ├── uploads/
+│   ├── processed/
+│   ├── temp/
+│   ├── Dockerfile
+│   └── requirements.txt
 │
-├── app/
-│   ├── api/
-│   ├── audio/
-│   ├── core/
-│   ├── schemas/
-│   ├── services/
-│   └── utils/
-│
-├── tests/
-│
-├── uploads/
-├── processed/
-├── temp/
-│
-├── requirements.txt
-└── requirements-dev.txt
-
 ├── frontend/
-
-├── docs/
-
+│   ├── src/
+│   ├── public/
+│   ├── Dockerfile
+│   └── package.json
+│
+├── docker-compose.yml
 ├── README.md
+└── LICENSE
 ```
 
 ---
@@ -294,6 +326,34 @@ http://localhost:8000/docs
 
 ---
 
+# Running with Docker
+
+Build and start all services
+
+```bash
+docker compose up --build
+```
+
+Backend
+
+```
+http://localhost:8000/docs
+```
+
+Frontend
+
+```
+http://localhost:3000
+```
+
+Stop containers
+
+```bash
+docker compose down
+```
+
+---
+
 # Running Tests
 
 ```bash
@@ -332,37 +392,30 @@ pre-commit run --all-files
 
 # Roadmap
 
-## Phase 1
+## Version 1.0 ✅
 
-- [x] Project structure
-- [x] REST API
-- [x] Audio upload
-- [x] BPM extraction
+- [x] FastAPI Backend
+- [x] Next.js Frontend
+- [x] Audio Upload
+- [x] BPM Estimation
 - [x] RMS Energy
+- [x] Waveform Generation
+- [x] Spectrogram Generation
 - [x] Compatibility Engine
+- [x] AI Recommendation Engine
+- [x] Professional Dashboard
+- [x] Docker Support
+- [x] Automated Tests
 
-## Phase 2
+## Future Versions
 
-- [ ] Waveform generation
-- [ ] Spectrogram generation
-- [ ] Dashboard API
-- [ ] Audio normalization (FFmpeg)
-
-## Phase 3
-
-- [ ] React/Next.js frontend
-- [ ] Track comparison interface
-- [ ] Visualization dashboard
-
-## Phase 4
-
-- [ ] AI Recommendation Engine
 - [ ] Key Detection
-- [ ] Camelot Wheel
-- [ ] Transition Suggestions
-- [ ] Mix Quality Score
-
----
+- [ ] Camelot Wheel Analysis
+- [ ] Harmonic Mixing
+- [ ] Playlist Optimization
+- [ ] Spotify Integration
+- [ ] Rekordbox Export
+- [ ] Real-time Audio Analysis
 
 # Academic Context
 
