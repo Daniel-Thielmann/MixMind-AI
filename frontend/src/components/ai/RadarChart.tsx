@@ -46,7 +46,7 @@ export function RadarChartCard({
         Analysis Overview
       </h3>
 
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={380}>
         <RechartsRadar data={data} cx="50%" cy="50%" outerRadius="70%">
           <PolarGrid stroke="rgba(255,255,255,0.08)" />
           <PolarAngleAxis

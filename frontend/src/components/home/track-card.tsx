@@ -28,7 +28,7 @@ export function TrackCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="h-full rounded-2xl border border-zinc-800 bg-card/75 p-6 shadow-[0_20px_60px_-35px_rgba(0,0,0,0.9)] backdrop-blur md:p-7"
+      className="rounded-2xl border border-zinc-800 bg-card/75 p-6 shadow-[0_20px_60px_-35px_rgba(0,0,0,0.9)] backdrop-blur md:p-7"
     >
       <header className="mb-5 flex items-center justify-between gap-3 flex-col">
         <h3 className="text-lg font-semibold text-text">{title}</h3>
@@ -118,7 +118,7 @@ function ImageBlock({
             }}
           />
         ) : (
-          <div className="flex h-44 items-center justify-center text-sm text-zinc-500">
+          <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
             Image not available
           </div>
         )}
