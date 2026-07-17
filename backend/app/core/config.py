@@ -52,16 +52,30 @@ class Settings(BaseSettings):
     )
 
     OPENROUTER_MODEL: str = Field(
-        default="openai/gpt-oss-120b:free",
+        default="openai/gpt-oss-20b:free",
         description="Primary model.",
     )
 
     OPENROUTER_MODELS: list[str] = Field(
         default_factory=lambda: [
+            "qwen/qwen3-next-80b-a3b-instruct",
             "google/gemma-4-31b-it:free",
+            "google/gemma-4-26b-a4b-it:free",
+            "tencent/hy3:free",
             "nvidia/nemotron-3-ultra-550b-a55b:free",
+            "poolside/laguna-m.1:free",
+            "qwen/qwen3-next-80b-a3b-instruct:free",
+            "qwen/qwen3-coder:free",
+            "nvidia/nemotron-3.5-content-safety:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "meta-llama/llama-3.2-3b-instruct:free",
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "mistralai/mistral-medium-3.5-128b",
+            "mistralai/mistral-small-4-119b-2603",
+            "nvidia/nemotron-mini-4b-instruct",
         ],
-        description="Fallback models.",
+        description="Fallback models in priority order.",
     )
 
     LLM_TIMEOUT: int = Field(

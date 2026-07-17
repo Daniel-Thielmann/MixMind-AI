@@ -1,6 +1,6 @@
 """Domain exceptions for the AI assistant layer."""
 
-_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+_RETRYABLE_STATUS_CODES = {0, 500, 502, 503, 504}
 
 
 class LLMError(Exception):

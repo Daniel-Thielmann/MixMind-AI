@@ -49,6 +49,8 @@ class LLMMetrics:
     success: bool = False
     final_model: str = ""
     fallback: bool = False
+    fallback_level: int = 0
+    fallback_reason: str = ""
     filled_fields: list[str] = field(default_factory=list)
     response_size: int = 0
     finish_reason: str = ""
@@ -109,6 +111,8 @@ class LLMManager:
             models_to_try = list(self._models)
 
         for model_idx, model in enumerate(models_to_try):
+            metrics.fallback_level = model_idx
+
             if model_idx > 0 and self._injected_client is not None:
                 logger.info(
                     "[%s] Skipping fallback model %s (injected client in use)",
@@ -127,81 +131,154 @@ class LLMManager:
 
             client = self._resolve_client(model_idx, model)
 
-            for attempt in range(self._max_retries):
+            logger.info(
+                "Trying model: %s",
+                model,
+            )
+
+            # --- Primary call ---
+            metrics.total_attempts += 1
+            metrics.model_attempts.append(f"{model}#1")
+            self._log_request_start(model, 0)
+
+            raw, retryable = self._try_call(
+                client, model, messages, temperature, max_tokens, metrics
+            )
+
+            if raw is None:
+                last_error = self._last_call_error
+                category = self._categorize_error(last_error)
+
+                if self._is_immediate_switch(category):
+                    reason = self._format_error_reason(last_error, category)
+                    logger.warning(
+                        "Model failed: %s\n"
+                        "Reason: %s\n"
+                        "Action: Switching immediately to next model.",
+                        model,
+                        reason,
+                    )
+                    metrics.fallback_reason = reason
+                    continue
+
+                if retryable:
+                    delay = self._backoff(0)
+                    reason = self._format_error_reason(last_error, category)
+                    logger.warning(
+                        "Model failed: %s\nReason: %s\nAction: Retry 1/1 (wait %.1fs)",
+                        model,
+                        reason,
+                        delay,
+                    )
+                    time.sleep(delay)
+
+                    # --- Retry call ---
+                    metrics.total_attempts += 1
+                    metrics.model_attempts.append(f"{model}#2")
+                    self._log_request_start(model, 1)
+
+                    raw, retryable = self._try_call(
+                        client, model, messages, temperature, max_tokens, metrics
+                    )
+
+                    if raw is None:
+                        last_error = self._last_call_error
+                        category = self._categorize_error(last_error)
+                        reason = self._format_error_reason(last_error, category)
+                        logger.warning(
+                            "Model failed: %s\n"
+                            "Reason: %s\n"
+                            "Action: Retry failed. Switching to next model.",
+                            model,
+                            reason,
+                        )
+                        metrics.fallback_reason = reason
+                        continue
+                else:
+                    reason = self._format_error_reason(last_error, category)
+                    logger.warning(
+                        "Model failed: %s\n"
+                        "Reason: %s\n"
+                        "Action: Not retryable. Switching to next model.",
+                        model,
+                        reason,
+                    )
+                    metrics.fallback_reason = reason
+                    continue
+
+            self._maybe_log_raw_response(model, raw)
+
+            # --- Parse JSON ---
+            parsed = self._repair_and_parse(raw)
+            if parsed is None:
+                self._metrics_collector.record_json_error()
+                self._log_raw_parse_error(model, raw)
+
+                logger.warning(
+                    "Model failed: %s\nReason: Invalid JSON\nAction: Retry 1/1",
+                    model,
+                )
+
                 metrics.total_attempts += 1
-                metrics.model_attempts.append(f"{model}#{attempt + 1}")
-
-                self._log_request_start(model, attempt)
-
+                metrics.model_attempts.append(f"{model}#json-retry")
                 raw, retryable = self._try_call(
                     client, model, messages, temperature, max_tokens, metrics
                 )
-                if raw is None:
-                    last_error = self._last_call_error
-                    if retryable and attempt < self._max_retries - 1:
-                        delay = self._backoff(attempt)
-                        logger.info(
-                            "[%s] Retrying model %s in %.1fs (attempt %d/%d)",
-                            self._request_id,
-                            model,
-                            delay,
-                            attempt + 1,
-                            self._max_retries,
-                        )
-                        time.sleep(delay)
-                        continue
-                    break
 
-                self._maybe_log_raw_response(model, raw)
+                if raw is not None:
+                    self._maybe_log_raw_response(model, raw)
+                    parsed = self._repair_and_parse(raw)
 
-                parsed = self._repair_and_parse(raw)
                 if parsed is None:
-                    self._metrics_collector.record_json_error()
-                    self._log_raw_parse_error(model, raw)
                     logger.warning(
-                        "[%s] Model %s returned unparseable JSON — skipping retry",
+                        "Model failed: %s\n"
+                        "Reason: Invalid JSON\n"
+                        "Action: Retry failed. Switching to next model.",
+                        model,
+                    )
+                    metrics.fallback_reason = "Invalid JSON"
+                    continue
+
+            # --- Normalize ---
+            normalised = self._normalize(parsed, metrics)
+
+            # --- Validate ---
+            if validator is not None:
+                try:
+                    if not validator(normalised):
+                        raise LLMValidationError("Validator rejected the response")
+                except LLMValidationError:
+                    logger.warning(
+                        "[%s] Model %s failed validation — switching models",
                         self._request_id,
                         model,
                     )
-                    break
+                    metrics.fallback_reason = "Validation failed"
+                    continue
+                except Exception as exc:
+                    logger.warning(
+                        "[%s] Model %s validator raised %s: %s",
+                        self._request_id,
+                        model,
+                        type(exc).__name__,
+                        exc,
+                    )
+                    metrics.fallback_reason = f"Validator error: {type(exc).__name__}"
+                    continue
 
-                normalised = self._normalize(parsed, metrics)
+            # --- Success ---
+            elapsed = time.monotonic() - start
+            self._registry.record_success(model, elapsed)
+            self._metrics_collector.record_success(model, elapsed)
 
-                if validator is not None:
-                    try:
-                        if not validator(normalised):
-                            raise LLMValidationError("Validator rejected the response")
-                    except LLMValidationError:
-                        logger.warning(
-                            "[%s] Model %s failed validation — skipping retry",
-                            self._request_id,
-                            model,
-                        )
-                        break
-                    except Exception as exc:
-                        logger.warning(
-                            "[%s] Model %s validator raised %s: %s",
-                            self._request_id,
-                            model,
-                            type(exc).__name__,
-                            exc,
-                        )
-                        if attempt < self._max_retries - 1:
-                            time.sleep(self._backoff(attempt))
-                        continue
+            metrics.success = True
+            metrics.final_model = model
+            metrics.validation_passed = True
+            metrics.total_time = elapsed
 
-                elapsed = time.monotonic() - start
-                self._registry.record_success(model, elapsed)
-                self._metrics_collector.record_success(model, elapsed)
-
-                metrics.success = True
-                metrics.final_model = model
-                metrics.validation_passed = True
-                metrics.total_time = elapsed
-
-                self._log_success(metrics)
-                self._log_summary(metrics)
-                return (normalised, model, metrics.total_attempts)
+            self._log_success(metrics)
+            self._log_summary(metrics)
+            return (normalised, model, metrics.total_attempts)
 
         metrics.total_time = time.monotonic() - start
         metrics.fallback = True
@@ -216,6 +293,48 @@ class LLMManager:
         ) from last_error
 
     _last_call_error: Exception | None = None
+
+    @staticmethod
+    def _categorize_error(error: Exception | None) -> str:
+        if error is None:
+            return "unknown"
+        if isinstance(error, LLMRateLimitError):
+            return "rate_limit"
+        if isinstance(error, LLMTimeoutError):
+            return "timeout"
+        if isinstance(error, LLMHTTPError):
+            if error.status_code == 404:
+                return "model_not_found"
+            if error.status_code in (500, 502, 503):
+                return "server_error"
+            if error.status_code == 0:
+                return "connection_error"
+            if error.status_code == 400:
+                return "invalid_model"
+            return f"http_{error.status_code}"
+        return type(error).__name__
+
+    @staticmethod
+    def _is_immediate_switch(category: str) -> bool:
+        return category in ("rate_limit", "model_not_found", "invalid_model")
+
+    @staticmethod
+    def _format_error_reason(error: Exception | None, category: str) -> str:
+        if isinstance(error, LLMRateLimitError):
+            return "HTTP 429"
+        if isinstance(error, LLMTimeoutError):
+            return "Timeout"
+        if isinstance(error, LLMHTTPError):
+            if category == "model_not_found":
+                return "HTTP 404"
+            if category == "server_error":
+                return f"HTTP {error.status_code}"
+            if category == "connection_error":
+                return "Connection Error"
+            if category == "invalid_model":
+                return "HTTP 400 (invalid model)"
+            return f"HTTP {error.status_code}"
+        return category
 
     def _try_call(
         self,
@@ -425,14 +544,13 @@ class LLMManager:
             "========================================================\n"
             "REQUEST ID: %s\n"
             "MODEL: %s\n"
-            "ATTEMPT: %d/%d\n"
+            "ATTEMPT: %d\n"
             "TEMPERATURE: %.1f\n"
             "MAX TOKENS: %d\n"
             "========================================================",
             self._request_id,
             model,
             attempt + 1,
-            self._max_retries,
             settings.LLM_TEMPERATURE,
             settings.LLM_MAX_TOKENS,
         )
@@ -474,29 +592,36 @@ class LLMManager:
             "==================================================\n"
             "LLM SUMMARY\n"
             "==================================================\n"
-            "analysis id:   %s\n"
-            "selected model: %s\n"
-            "elapsed:       %.2fs\n"
-            "fallback used: %s\n"
-            "retry count:   %d\n"
-            "response size: %d\n"
-            "validation:    %s\n"
+            "analysis id:      %s\n"
+            "selected model:   %s\n"
+            "attempts:         %d\n"
+            "fallback level:   %d\n"
+            "fallback reason:  %s\n"
+            "elapsed:          %.2fs\n"
+            "fallback used:    %s\n"
+            "response size:    %d\n"
+            "validation:       %s\n"
             "==================================================",
             m.request_id,
             m.final_model or "N/A",
+            m.total_attempts,
+            m.fallback_level,
+            m.fallback_reason or "N/A",
             m.total_time,
             "Yes" if m.fallback else "No",
-            m.total_attempts - 1,
             m.response_size,
             "Passed" if m.validation_passed else "Failed",
         )
 
     def _log_fallback(self, m: LLMMetrics, last_error: Exception | None) -> None:
         logger.warning(
-            "[%s] FALLBACK — attempts: %d | total: %.3fs | last_error: %s",
+            "[%s] FALLBACK — attempts: %d | total: %.3fs | "
+            "fallback_level: %d | reason: %s | last_error: %s",
             m.request_id,
             m.total_attempts,
             m.total_time,
+            m.fallback_level,
+            m.fallback_reason or "N/A",
             last_error,
         )
 

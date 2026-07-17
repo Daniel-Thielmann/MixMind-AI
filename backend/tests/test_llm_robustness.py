@@ -2,6 +2,7 @@
 
 import time
 
+import pytest
 from app.ai.agent import DJAgent
 from app.ai.cache import RecommendationCache
 from app.ai.exceptions import LLMHTTPError, LLMRateLimitError, LLMTimeoutError
@@ -248,7 +249,10 @@ class TestInvalidModel:
 
 
 class TestRetryStrategy:
-    def test_http_429_retries(self) -> None:
+    def test_http_429_switches_immediately(self) -> None:
+        """HTTP 429 should NOT retry — switch to next model immediately."""
+        from app.ai.exceptions import LLMAllModelsFailed
+
         metrics = LLMMetricsCollector()
         client = RaisingClient(LLMRateLimitError(429, "rate limit"), fail_count=1)
         manager = LLMManager(
@@ -256,7 +260,21 @@ class TestRetryStrategy:
             base_url="http://fake.local",
             api_key="test-key",
             metrics_collector=metrics,
-            max_retries=2,
+        )
+        manager._injected_client = client
+
+        messages = [{"role": "user", "content": "test"}]
+        with pytest.raises(LLMAllModelsFailed):
+            manager.generate(messages)
+        assert client.call_count == 1
+
+    def test_http_500_retries_once(self) -> None:
+        """HTTP 500 should retry once, then switch on second failure."""
+        client = RaisingClient(LLMHTTPError(500, "server error"), fail_count=1)
+        manager = LLMManager(
+            models=["m"],
+            base_url="http://fake.local",
+            api_key="test-key",
         )
         manager._injected_client = client
 
@@ -264,21 +282,6 @@ class TestRetryStrategy:
         parsed, model, attempts = manager.generate(messages)
         assert parsed is not None
         assert client.call_count == 2
-
-    def test_http_500_retries(self) -> None:
-        client = RaisingClient(LLMHTTPError(500, "server error"), fail_count=2)
-        manager = LLMManager(
-            models=["m"],
-            base_url="http://fake.local",
-            api_key="test-key",
-            max_retries=3,
-        )
-        manager._injected_client = client
-
-        messages = [{"role": "user", "content": "test"}]
-        parsed, model, attempts = manager.generate(messages)
-        assert parsed is not None
-        assert client.call_count == 3
 
     def test_http_400_not_retried(self) -> None:
         """HTTP 400 should not be retried on the same model."""
@@ -302,8 +305,8 @@ class TestRetryStrategy:
 
         assert client.call_count == 1
 
-    def test_invalid_json_not_retried_on_same_model(self) -> None:
-        """Invalid JSON should NOT be retried — break to next model."""
+    def test_invalid_json_retried_once(self) -> None:
+        """Invalid JSON should be retried once, then switch to next model."""
         call_count = 0
 
         class JsonClient:
@@ -316,17 +319,20 @@ class TestRetryStrategy:
             models=["model-a"],
             base_url="http://fake.local",
             api_key="test-key",
-            max_retries=3,
         )
         manager._injected_client = JsonClient()
 
         messages = [{"role": "user", "content": "test"}]
+        from app.ai.exceptions import LLMAllModelsFailed
+
         try:
             manager.generate(messages)
+        except LLMAllModelsFailed:
+            pass
         except Exception:
             pass
 
-        assert call_count == 1
+        assert call_count == 2
 
 
 # ===================================================================
@@ -523,30 +529,29 @@ class TestCacheIntegration:
 
 
 class TestValidatorExceptions:
-    def test_validator_raises_unexpected_exception_is_retried(self) -> None:
-        """Validator raising Exception should retry (not break)."""
+    def test_validator_unexpected_exception_does_not_retry(self) -> None:
+        """Validator raising Exception should NOT retry — switch to next model."""
+        from app.ai.exceptions import LLMAllModelsFailed
+
         call_count = 0
 
-        def flaky_validator(d: dict) -> bool:
+        def crashing_validator(d: dict) -> bool:
             nonlocal call_count
             call_count += 1
-            if call_count == 1:
-                raise RuntimeError("validator crashed")
-            return True
+            raise RuntimeError("validator crashed")
 
         client = FakeLLMClient(VALID_LLM_JSON)
         manager = LLMManager(
             models=["m"],
             base_url="http://fake.local",
             api_key="test-key",
-            max_retries=2,
         )
         manager._injected_client = client
 
         messages = [{"role": "user", "content": "test"}]
-        parsed, model, attempts = manager.generate(messages, validator=flaky_validator)
-        assert parsed is not None
-        assert call_count == 2
+        with pytest.raises(LLMAllModelsFailed):
+            manager.generate(messages, validator=crashing_validator)
+        assert call_count == 1
 
 
 class TestValidatorRejection:

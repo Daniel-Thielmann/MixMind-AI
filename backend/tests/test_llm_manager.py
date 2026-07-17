@@ -185,12 +185,19 @@ class TestNormalize:
 
 
 class TestIsRetryable:
-    def test_429_is_retryable(self) -> None:
+    def test_429_is_not_retryable(self) -> None:
         from app.ai.exceptions import LLMHTTPError
 
         err = LLMHTTPError(429, "Rate limited")
-        assert err.is_retryable() is True
+        assert err.is_retryable() is False
         assert err.status_code == 429
+
+    def test_0_connection_error_is_retryable(self) -> None:
+        from app.ai.exceptions import LLMHTTPError
+
+        err = LLMHTTPError(0, "Connection error")
+        assert err.is_retryable() is True
+        assert err.status_code == 0
 
     def test_500_is_retryable(self) -> None:
         from app.ai.exceptions import LLMHTTPError
@@ -226,13 +233,13 @@ class TestIsRetryable:
     def test_0_is_not_retryable(self) -> None:
         from app.ai.exceptions import LLMHTTPError
 
-        assert LLMHTTPError(0, "").is_retryable() is False
+        assert LLMHTTPError(0, "").is_retryable() is True
 
-    def test_llm_rate_limit_error_is_retryable(self) -> None:
+    def test_llm_rate_limit_error_is_not_retryable(self) -> None:
         from app.ai.exceptions import LLMRateLimitError
 
         err = LLMRateLimitError(429, "Rate limited")
-        assert err.is_retryable() is True
+        assert err.is_retryable() is False
 
 
 # ===================================================================
