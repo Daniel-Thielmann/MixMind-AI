@@ -13,8 +13,7 @@ interface TrackUploadCardProps {
   accentColor: string;
   compact?: boolean;
   audioSrc?: string;
-  previewStartSeconds?: number;
-  previewEndSeconds?: number;
+  active?: boolean;
 }
 
 function fmt(t: number) {
@@ -33,13 +32,11 @@ export function TrackUploadCard({
   accentColor,
   compact = false,
   audioSrc,
-  previewStartSeconds = 0,
-  previewEndSeconds,
+  active = false,
 }: TrackUploadCardProps) {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
-  const [segmentStart, setSegmentStart] = useState(0);
   const [mediaError, setMediaError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const seekRef = useRef<HTMLDivElement | null>(null);
@@ -53,39 +50,16 @@ export function TrackUploadCard({
     if (!audioRef.current || !seekRef.current) return;
     const rect = seekRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
-    audioRef.current.currentTime = segmentStart + x * audioDuration;
-  }, [audioDuration, segmentStart]);
+    audioRef.current.currentTime = x * audioDuration;
+  }, [audioDuration]);
 
   useEffect(() => {
     if (!audioSrc) return;
     const el = new Audio(audioSrc);
     el.preload = "metadata";
-    el.ontimeupdate = () => {
-      const start = Math.min(previewStartSeconds, el.duration);
-      const end = Math.min(previewEndSeconds ?? el.duration, el.duration);
-      if (el.currentTime >= end) {
-        el.pause();
-        el.currentTime = start;
-        setCurrentTime(0);
-        setPlaying(false);
-        return;
-      }
-      setCurrentTime(Math.max(0, el.currentTime - start));
-    };
-    el.onloadedmetadata = () => {
-      const start = Math.min(previewStartSeconds, el.duration);
-      const end = Math.max(start, Math.min(previewEndSeconds ?? el.duration, el.duration));
-      setMediaError(false);
-      setSegmentStart(start);
-      setAudioDuration(end - start);
-      setCurrentTime(0);
-      el.currentTime = start;
-    };
-    el.onended = () => {
-      el.currentTime = Math.min(previewStartSeconds, el.duration);
-      setCurrentTime(0);
-      setPlaying(false);
-    };
+    el.ontimeupdate = () => { setCurrentTime(el.currentTime); };
+    el.onloadedmetadata = () => { setMediaError(false); setAudioDuration(el.duration); };
+    el.onended = () => setPlaying(false);
     el.onpause = () => setPlaying(false);
     el.onerror = () => { setPlaying(false); setMediaError(true); };
     audioRef.current = el;
@@ -93,7 +67,7 @@ export function TrackUploadCard({
       el.pause();
       el.src = "";
     };
-  }, [audioSrc, previewEndSeconds, previewStartSeconds]);
+  }, [audioSrc]);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -113,9 +87,62 @@ export function TrackUploadCard({
   );
 
   const progress = audioDuration > 0 ? currentTime / audioDuration : 0;
+  const highlighted = playing || active;
 
   return (
-    <motion.div layout className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/50 p-5 backdrop-blur-sm transition-all duration-500 hover:border-border-light">
+    <motion.div
+      layout
+      animate={{
+        borderColor: highlighted ? `${accentColor}80` : "rgba(63, 63, 70, 0.6)",
+        boxShadow: highlighted
+          ? `0 0 0 1px ${accentColor}18, 0 18px 55px -22px ${accentColor}75, inset 0 1px 0 ${accentColor}22`
+          : "0 0 0 0 transparent",
+        x: highlighted ? [0, -0.5, 0.6, -0.3, 0.4, 0] : 0,
+        y: highlighted ? [0, -0.4, 0.3, -0.2, 0.35, 0] : 0,
+        scale: highlighted ? [1, 1.002, 1, 1.0025, 1] : 1,
+      }}
+      transition={{
+        borderColor: { duration: 0.35, ease: "easeOut" },
+        boxShadow: { duration: 0.35, ease: "easeOut" },
+        x: { duration: 0.9, repeat: highlighted ? Infinity : 0, ease: "easeInOut" },
+        y: { duration: 1.05, repeat: highlighted ? Infinity : 0, ease: "easeInOut" },
+        scale: { duration: 1.4, repeat: highlighted ? Infinity : 0, ease: "easeInOut" },
+      }}
+      className="group relative overflow-hidden rounded-2xl border bg-card/50 p-5 backdrop-blur-sm transition-colors duration-500 hover:border-border-light"
+    >
+      <motion.div
+        initial={false}
+        animate={{
+          rotate: highlighted ? 360 : 0,
+          opacity: highlighted ? 1 : 0,
+        }}
+        transition={{
+          rotate: { duration: 2.2, repeat: highlighted ? Infinity : 0, ease: "linear" },
+          opacity: { duration: 0.3 },
+        }}
+        className="pointer-events-none absolute -inset-[65%]"
+        style={{
+          background: `conic-gradient(from 0deg, transparent 0deg, transparent 245deg, ${accentColor}20 285deg, ${accentColor} 320deg, transparent 350deg)`,
+        }}
+      />
+      <div className="pointer-events-none absolute inset-px rounded-[15px] bg-card" />
+      <motion.div
+        animate={{ opacity: highlighted ? 1 : 0 }}
+        transition={{ duration: 0.35 }}
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `linear-gradient(145deg, ${accentColor}18, transparent 58%)`,
+        }}
+      />
+      <motion.div
+        animate={{ scaleX: highlighted ? 1 : 0, opacity: highlighted ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="absolute inset-x-0 top-0 h-0.5 origin-left"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
+          boxShadow: `0 0 18px ${accentColor}`,
+        }}
+      />
       <div className="pointer-events-none absolute -inset-1 opacity-0 transition-opacity duration-500 group-hover:opacity-20 blur-xl"
         style={{ background: `radial-gradient(ellipse at center, ${accentColor}, transparent)` }}
       />
@@ -124,7 +151,20 @@ export function TrackUploadCard({
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: accentColor }}>
             {label}
           </span>
-          <span className="text-[10px] text-text-tertiary">{duration}</span>
+          <div className="flex items-center gap-2">
+            {highlighted ? (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider"
+                style={{ color: accentColor, backgroundColor: `${accentColor}18` }}
+              >
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: accentColor }} />
+                Now playing
+              </motion.span>
+            ) : null}
+            <span className="text-[10px] text-text-tertiary">{duration}</span>
+          </div>
         </div>
         <h3 className="font-semibold text-text leading-snug text-sm">{title}</h3>
         <p className="mt-0.5 text-xs text-text-tertiary">{artist}</p>

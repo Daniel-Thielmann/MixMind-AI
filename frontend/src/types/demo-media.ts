@@ -17,10 +17,10 @@ export interface DemoMediaManifest {
   title: string;
   relationship: string;
   expiresAt: number;
-  assets: Record<"trackA" | "trackB" | "transition" | "video" | "poster", DemoMediaAsset>;
+  assets: Record<"trackA" | "trackB" | "trackC" | "transition" | "video" | "poster", DemoMediaAsset>;
 }
 
-const REQUIRED_ASSETS = ["trackA", "trackB", "transition", "video", "poster"] as const;
+const REQUIRED_ASSETS = ["trackA", "trackB", "trackC", "transition", "video", "poster"] as const;
 
 export function isDemoMediaManifest(value: unknown): value is DemoMediaManifest {
   if (!value || typeof value !== "object") return false;
