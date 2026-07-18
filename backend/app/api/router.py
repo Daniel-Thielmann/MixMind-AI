@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from app.api.v1.endpoints.ai import router as ai_router
-from app.api.v1.endpoints.analysis import router as analysis_router
-from app.core.config import settings
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
+
+from app.api.v1.endpoints.ai import router as ai_router
+from app.api.v1.endpoints.analysis import router as analysis_router
+from app.api.v1.endpoints.storage import router as storage_router
+from app.api.v1.endpoints.tracks import router as tracks_router
+from app.core.config import settings
 
 api_router = APIRouter()
 
@@ -28,3 +31,5 @@ async def health_check() -> JSONResponse:
 
 api_router.include_router(analysis_router, prefix="/analysis", tags=["Analysis"])
 api_router.include_router(ai_router, prefix="/ai", tags=["AI"])
+api_router.include_router(storage_router, prefix="/storage", tags=["Storage"])
+api_router.include_router(tracks_router, prefix="/tracks", tags=["Tracks"])
