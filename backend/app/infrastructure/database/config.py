@@ -3,7 +3,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
-    database_url: str
+    # Keep local development zero-config. Deployments and Docker override this
+    # with DATABASE_URL and continue to use PostgreSQL.
+    database_url: str = "sqlite:///./mixmind.db"
 
     @field_validator("database_url", mode="before")
     @classmethod

@@ -23,6 +23,7 @@ services:
       - ./backend/.env
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@postgres:5432/mixmind
     volumes:
       - uploads-data:/app/uploads
       - processed-data:/app/processed
