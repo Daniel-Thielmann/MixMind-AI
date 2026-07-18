@@ -3,6 +3,7 @@
 import time
 
 import pytest
+
 from app.infrastructure.llm.agent import DJAgent
 from app.infrastructure.llm.cache import RecommendationCache
 from app.infrastructure.llm.exceptions import (

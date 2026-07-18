@@ -9,9 +9,9 @@ from uuid import uuid4
 
 import librosa
 import numpy as np
-from fastapi import UploadFile
 
 from app.application.dto.api import AnalysisMetadata, UploadAnalysisResponse
+from app.application.ports.storage import AnalysisArtifactStorage, UploadSource
 from app.application.use_cases.compatibility.compare_tracks.service import (
     CompatibilityService,
     compatibility_service,
@@ -228,8 +228,8 @@ class AnalysisService:
 
     def analyze(
         self,
-        track_a: UploadFile,
-        track_b: UploadFile,
+        track_a: UploadSource,
+        track_b: UploadSource,
     ) -> UploadAnalysisResponse:
         """Store both uploads, analyze them, and return the API response."""
 
@@ -388,8 +388,7 @@ class AnalysisService:
         )
 
         # ---- Mirror generated visualizations to Supabase Storage ----
-        upload_artifact = getattr(self._storage, "upload_artifact", None)
-        if callable(upload_artifact):
+        if isinstance(self._storage, AnalysisArtifactStorage):
             storage_root = settings.processed_path.parent
             waveform_a_path = storage_root / waveform_a.image_path
             waveform_b_path = storage_root / waveform_b.image_path
@@ -398,7 +397,7 @@ class AnalysisService:
 
             waveform_a = waveform_a.model_copy(
                 update={
-                    "url": upload_artifact(
+                    "url": self._storage.upload_artifact(
                         waveform_a_path,
                         f"analyses/{analysis_id}/waveforms/{waveform_a_path.name}",
                     )
@@ -406,7 +405,7 @@ class AnalysisService:
             )
             waveform_b = waveform_b.model_copy(
                 update={
-                    "url": upload_artifact(
+                    "url": self._storage.upload_artifact(
                         waveform_b_path,
                         f"analyses/{analysis_id}/waveforms/{waveform_b_path.name}",
                     )
@@ -414,7 +413,7 @@ class AnalysisService:
             )
             spectrogram_a = spectrogram_a.model_copy(
                 update={
-                    "url": upload_artifact(
+                    "url": self._storage.upload_artifact(
                         spectrogram_a_path,
                         f"analyses/{analysis_id}/spectrograms/{spectrogram_a_path.name}",
                     )
@@ -422,7 +421,7 @@ class AnalysisService:
             )
             spectrogram_b = spectrogram_b.model_copy(
                 update={
-                    "url": upload_artifact(
+                    "url": self._storage.upload_artifact(
                         spectrogram_b_path,
                         f"analyses/{analysis_id}/spectrograms/{spectrogram_b_path.name}",
                     )
@@ -522,6 +521,9 @@ class AnalysisService:
         logger.info("=" * 60)
         logger.info("Analysis completed successfully | Total time: %.2f s", total_time)
         logger.info("=" * 60)
+
+        if isinstance(self._storage, AnalysisArtifactStorage):
+            self._storage.cleanup_local(path_a, path_b)
 
         return response
 

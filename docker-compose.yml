@@ -24,6 +24,7 @@ services:
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DATABASE_URL=postgresql+psycopg://postgres:postgres@postgres:5432/mixmind
+      - INTERNAL_AUTH_SECRET=${INTERNAL_AUTH_SECRET:-development-only-change-me}
     volumes:
       - uploads-data:/app/uploads
       - processed-data:/app/processed
@@ -55,6 +56,8 @@ services:
         NEXT_PUBLIC_API_URL: http://localhost:8000
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
+      BACKEND_API_URL: http://backend:8000
+      INTERNAL_AUTH_SECRET: ${INTERNAL_AUTH_SECRET:-development-only-change-me}
       NODE_ENV: production
     ports:
       - "3000:3000"

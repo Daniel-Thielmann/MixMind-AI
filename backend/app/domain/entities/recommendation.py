@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from app.domain.events.mix_events import RecommendationGenerated
 from app.domain.value_objects.confidence_score import ConfidenceScore
 from app.domain.value_objects.identifiers import MixId
-from pydantic import BaseModel, ConfigDict, Field
 
 
 class TempoAnalysis(BaseModel):

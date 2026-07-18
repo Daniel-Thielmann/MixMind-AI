@@ -21,3 +21,4 @@ class TrackModel(Base):
     key: Mapped[str] = mapped_column(String(50))
     camelot: Mapped[str | None] = mapped_column(String(10))
     sample_rate: Mapped[int] = mapped_column(Integer)
+    owner_id: Mapped[str] = mapped_column(String(255), index=True, default="anonymous")

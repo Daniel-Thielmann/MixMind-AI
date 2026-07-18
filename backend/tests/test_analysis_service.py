@@ -2,6 +2,8 @@ import struct
 from io import BytesIO
 from pathlib import Path
 
+from fastapi import UploadFile
+
 from app.application.use_cases.analysis.analyze_track import AnalysisService
 from app.domain.entities.track import AudioAnalysis
 from app.domain.value_objects.compatibility import CompatibilityResult
@@ -14,7 +16,6 @@ from app.infrastructure.llm.schemas import (
     MixStrategy,
     TempoAnalysis,
 )
-from fastapi import UploadFile
 
 
 def _write_silent_wav(

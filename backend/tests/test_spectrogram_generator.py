@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+
 from app.infrastructure.audio.spectrogram import SpectrogramGenerator
 
 

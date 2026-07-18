@@ -1,6 +1,9 @@
 import asyncio
 from io import BytesIO
 
+from fastapi import UploadFile
+from fastapi.testclient import TestClient
+
 from app.api.v1.endpoints import analysis as analysis_module
 from app.application.dto.api import UploadAnalysisResponse
 from app.domain.entities.track import AudioAnalysis
@@ -20,8 +23,6 @@ from app.infrastructure.llm.schemas import (
     TempoAnalysis,
 )
 from app.main import app
-from fastapi import UploadFile
-from fastapi.testclient import TestClient
 
 
 def test_analysis_status_returns_service_information() -> None:

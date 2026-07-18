@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from app.domain.value_objects.compatibility import CompatibilityResult
 from pydantic import BaseModel
+
+from app.domain.value_objects.compatibility import CompatibilityResult
 
 
 class CompareTracksInput(BaseModel):

@@ -1,9 +1,9 @@
 import type { DemoMetadata } from "@/types/video";
 
 export const DEMO_METADATA: DemoMetadata = {
-  src: process.env.NEXT_PUBLIC_DEMO_VIDEO_URL ?? "/demo/transition.mp3",
-  poster: "/demo/poster.jpg",
-  thumbnail: "/demo/thumbnail.jpg",
+  src: "",
+  poster: "",
+  thumbnail: "",
   title: "Samba → Povoada (Remix) — AI Transition Analysis",
   duration: 164,
   tracks: {

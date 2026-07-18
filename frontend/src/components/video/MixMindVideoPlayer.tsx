@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -312,16 +313,12 @@ function TimelineSection({
   metadata,
   currentTime,
   duration,
-  progress,
   currentPhase,
-  markers,
 }: {
   metadata?: DemoMetadata;
   currentTime: number;
   duration: number;
-  progress: number;
   currentPhase: "track-a" | "blending" | "track-b";
-  markers: { time: number; label: string; type: string }[];
 }) {
   const trackA = metadata?.tracks.a;
   const trackB = metadata?.tracks.b;
@@ -425,7 +422,6 @@ function TimelineSection({
       {/* Chapter markers */}
       <div className="relative flex items-center justify-between">
         {chapters.slice(0, 6).map((ch, i) => {
-          const pos = (ch.time / duration) * 100;
           return (
             <div
               key={i}
@@ -509,7 +505,7 @@ export function MixMindVideoPlayer({
     onStateChange,
   });
 
-  const { progress, currentPhase, transitionZones } = useTimeline({
+  const { currentPhase } = useTimeline({
     currentTime,
     duration,
     metadata,
@@ -520,7 +516,7 @@ export function MixMindVideoPlayer({
     metadata,
   });
 
-  const { markers } = useMarkers({
+  useMarkers({
     currentTime,
     metadata,
     onMarkerReached,
@@ -808,9 +804,7 @@ export function MixMindVideoPlayer({
           metadata={metadata}
           currentTime={currentTime}
           duration={duration}
-          progress={progress}
           currentPhase={currentPhase}
-          markers={markers}
         />
       </div>
     </div>

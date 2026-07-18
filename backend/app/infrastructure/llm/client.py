@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
 import httpx
+
 from app.infrastructure.llm.exceptions import (
     LLMHTTPError,
     LLMRateLimitError,

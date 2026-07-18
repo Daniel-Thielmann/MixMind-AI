@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Sparkles, DollarSign, BookOpen } from "lucide-react";
+import { Menu, X, LayoutDashboard, Sparkles, DollarSign, AudioLines } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Features", href: "/#features", icon: Sparkles },
   { label: "Pricing", href: "/#pricing", icon: DollarSign },
-  { label: "Docs", href: "/docs", icon: BookOpen },
+  { label: "Analyzer", href: "/analyzer", icon: AudioLines },
 ];
 
 export function Header() {

@@ -1,8 +1,9 @@
+from pydantic import BaseModel, Field
+
 from app.domain.entities.recommendation import AIRecommendationResponse
 from app.domain.entities.track import AudioAnalysis
 from app.domain.value_objects.compatibility import CompatibilityResult
 from app.domain.value_objects.visualization import Spectrograms, Waveforms
-from pydantic import BaseModel, Field
 
 
 class ApiResponse(BaseModel):
