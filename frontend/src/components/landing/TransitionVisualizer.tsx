@@ -182,7 +182,7 @@ export function TransitionVisualizer({ playing, currentTime }: TransitionVisuali
       </div>
 
       {/* Waveform */}
-      <div className="flex h-14 items-end gap-[2px]">
+      <div className="flex h-14 items-end gap-0.5">
         {animatedHeights.map((h, i) => {
           const t = i / animatedHeights.length;
           const barColor = phase === "track1"

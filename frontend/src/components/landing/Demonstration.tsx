@@ -5,16 +5,18 @@ import { motion } from "framer-motion";
 import { SectionWrapper } from "./SectionWrapper";
 import { AudioPlayer } from "./AudioPlayer";
 import { FrequencyBars } from "./FrequencyBars";
-import { VideoDemo } from "./VideoDemo";
-import { TransitionVisualizer } from "./TransitionVisualizer";
+import { MixMindVideoPlayer } from "@/components/video";
+import { AIAnalysisPanel } from "@/components/ai-analysis/AIAnalysisPanel";
+import { DEMO_METADATA } from "@/constants/video";
+import type { VideoState } from "@/types/video";
 
 export function Demonstration() {
   const [playing, setPlaying] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [videoTime, setVideoTime] = useState(0);
 
-  const handlePlayStateChange = useCallback((p: boolean) => {
-    setVideoPlaying(p);
+  const handleStateChange = useCallback((state: VideoState) => {
+    setVideoPlaying(state === "playing");
   }, []);
 
   const handleTimeUpdate = useCallback((t: number) => {
@@ -138,23 +140,28 @@ export function Demonstration() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mx-auto mt-16 max-w-3xl space-y-6"
+          className="mx-auto mt-16 max-w-4xl"
         >
-          <div className="text-center">
+          <div className="mb-8 text-center">
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-text-tertiary">
               — Watch a real transition analyzed by MixMind —
             </span>
           </div>
 
-          <VideoDemo
-            onPlayStateChange={handlePlayStateChange}
+          <MixMindVideoPlayer
+            src={DEMO_METADATA.src}
+            poster={DEMO_METADATA.poster}
+            metadata={DEMO_METADATA}
+            onStateChange={handleStateChange}
             onTimeUpdate={handleTimeUpdate}
           />
 
-          <TransitionVisualizer
-            playing={videoPlaying}
-            currentTime={videoTime}
-          />
+          <div className="mt-8">
+            <AIAnalysisPanel
+              currentTime={videoTime}
+              isPlaying={videoPlaying}
+            />
+          </div>
         </motion.div>
       </div>
     </SectionWrapper>

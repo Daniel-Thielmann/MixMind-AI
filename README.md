@@ -284,6 +284,32 @@ Upcoming features:
 
 ---
 
+# Demo Assets
+
+The landing page includes a demo video at `frontend/public/demo/clip_1080p.mp4`.
+
+**This file is not versioned** (~48 MB). It is a generated artifact.
+
+To regenerate all demo assets, run:
+
+```bash
+bash backend/scripts/extract-demo.sh \
+  --url "https://youtu.be/GtSCkHk9fLw" \
+  --start 18600 \
+  --end 18764 \
+  --output frontend/public/demo
+```
+
+Prerequisites:
+
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+- [FFmpeg](https://ffmpeg.org/)
+
+The script downloads the full video, extracts a 164‑second segment at 1920×1080,
+and generates poster/thumbnail images + `metadata.json`.
+
+---
+
 # Running Locally
 
 Clone the repository

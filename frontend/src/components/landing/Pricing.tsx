@@ -10,9 +10,10 @@ const PLANS = [
     price: "$0",
     description: "Perfect for trying out MixMind",
     features: [
-      "Up to 5 analyses per month",
+      "Up to 1 analysis per day",
       "Basic BPM & key detection",
       "Waveform preview",
+      "Spectrogram preview",
       "Single transition recommendation",
       "Community support",
     ],
@@ -25,7 +26,7 @@ const PLANS = [
     period: "/month",
     description: "For hobbyist DJs getting started",
     features: [
-      "Up to 50 analyses per month",
+      "Up to 10 analyses per day",
       "Full BPM, key & energy analysis",
       "Waveform & spectrogram export",
       "AI transition strategies",
