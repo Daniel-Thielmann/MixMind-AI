@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
+  { label: "Demonstration", href: "#demo" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Demo", href: "#demo" },
-  { label: "Features", href: "#features" },
-  { label: "Technologies", href: "#technologies" },
+  { label: "Why MixMind", href: "#features" },
+  { label: "Pricing", href: "#pricing" },
 ];
 
 export function Header() {
@@ -51,7 +51,7 @@ export function Header() {
             </a>
           ))}
           <motion.a
-            href="#upload"
+            href="/analyzer"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-background transition-all duration-300 hover:bg-primary-dark"
@@ -103,7 +103,7 @@ function MobileMenu() {
                 </a>
               ))}
               <a
-                href="#upload"
+                href="/analyzer"
                 onClick={() => setOpen(false)}
                 className="mt-2 rounded-lg bg-primary px-3 py-2 text-center text-sm font-medium text-background"
               >

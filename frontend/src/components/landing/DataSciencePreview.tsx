@@ -2,88 +2,35 @@
 
 import { motion } from "framer-motion";
 import { SectionWrapper } from "./SectionWrapper";
-import { MOCK_DATASCIENCE_CARDS } from "./mock-data";
-import {
-  BarChart3,
-  ScatterChart,
-  Network,
-  CircleDot,
-  Grid3x3,
-  Gauge,
-  TrendingUp,
-  Table2,
-} from "lucide-react";
 
-const ICON_MAP: Record<string, React.ElementType> = {
-  BarChart3,
-  ScatterChart,
-  Network,
-  CircleDot,
-  Grid3x3,
-  Gauge,
-  TrendingUp,
-  Table2,
-};
+const HEARD = ["BPM", "Key", "Feeling", "Energy"];
+const SEEN = ["Harmonic compatibility", "Phrase alignment", "Bass collision", "Vocal clash", "Groove continuity", "Dynamic energy", "Transition confidence", "Crowd impact"];
 
 export function DataSciencePreview() {
   return (
-    <SectionWrapper className="border-t border-border/50 py-24 md:py-32">
-      <div className="mx-auto max-w-7xl px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-16 text-center"
-        >
-          <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.25em] text-primary">
-            Data Science
-          </span>
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-            Built on{" "}
-            <span className="bg-gradient-to-r from-primary to-accent-blue bg-clip-text text-transparent">
-              Machine Learning
-            </span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-text-secondary">
-            Advanced audio feature extraction and analysis powering every recommendation. Visualizations coming in the next sprint.
-          </p>
-        </motion.div>
+    <SectionWrapper className="border-t border-border/50 py-24 md:py-36">
+      <div className="mx-auto max-w-6xl px-6 text-center">
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Beyond the waveform</span>
+        <h2 className="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight md:text-5xl">You hear the music. <span className="text-primary">MixMind reveals what connects it.</span></h2>
+        <p className="mx-auto mt-5 max-w-xl text-text-secondary">AI does not replace your instinct. It gives your instinct another layer of perception.</p>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {MOCK_DATASCIENCE_CARDS.map((card, index) => {
-            const Icon = ICON_MAP[card.icon] || BarChart3;
-            return (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const }}
-                className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all duration-500 hover:border-primary/20 hover:bg-card-hover"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
-                <div className="relative">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-background text-primary">
-                    <Icon size={18} />
-                  </div>
-                  <h3 className="mb-1 text-sm font-semibold text-text">{card.title}</h3>
-                  <p className="mb-3 text-xs text-text-tertiary">{card.description}</p>
-                  <div className="h-16 rounded-lg bg-background/50 p-2">
-                    <div className="flex h-full items-center justify-center">
-                      <motion.div
-                        animate={{ opacity: [0.3, 0.6, 0.3] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary"
-                      >
-                        Render in Sprint 3
-                      </motion.div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+        <div className="relative mt-16 overflow-hidden rounded-[2rem] border border-border bg-card/50 px-5 py-12 md:px-12 md:py-16">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(68,243,208,0.09),transparent_55%)]" />
+          <p className="relative text-sm font-medium text-text-secondary">What DJs hear</p>
+          <div className="relative mt-5 flex flex-wrap justify-center gap-3">
+            {HEARD.map((item, i) => <motion.span key={item} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * .08 }} className="rounded-full border border-border px-4 py-2 text-sm text-text">{item}</motion.span>)}
+          </div>
+          <motion.div initial={{ height: 0 }} whileInView={{ height: 64 }} viewport={{ once: true }} transition={{ duration: .8, delay: .25 }} className="mx-auto my-7 w-px bg-gradient-to-b from-border to-primary" />
+          <p className="relative text-sm font-medium text-primary">What MixMind sees</p>
+          <div className="relative mx-auto mt-6 flex max-w-3xl flex-wrap justify-center gap-3">
+            {SEEN.map((item, i) => <motion.span key={item} initial={{ opacity: 0, scale: .92 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: .35 + i * .07 }} className="rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm text-text shadow-[0_0_24px_rgba(68,243,208,0.05)]">{item}</motion.span>)}
+          </div>
+          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.1 }} className="relative mt-12 text-xl font-semibold md:text-2xl">Then we connect everything.</motion.p>
+          <div className="relative mx-auto mt-7 flex max-w-xl items-center gap-4">
+            <div className="h-3 w-3 rounded-full bg-primary shadow-[0_0_24px_#44f3d0]" />
+            <motion.div initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 1.2, delay: .7 }} className="h-px flex-1 origin-left bg-gradient-to-r from-primary via-white to-accent-blue" />
+            <div className="h-3 w-3 rounded-full bg-accent-blue shadow-[0_0_24px_#3b82f6]" />
+          </div>
         </div>
       </div>
     </SectionWrapper>
