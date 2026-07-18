@@ -38,13 +38,14 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "$29",
+    price: "$25",
     period: "/month",
     description: "For professional DJs and producers",
     features: [
       "Unlimited analyses",
+      "AI transition strategies",
       "Advanced ML feature extraction",
-      "Batch processing (up to 10 tracks)",
+      "Waveform & spectrogram export",
       "Export analysis reports (PDF/CSV)",
       "DJ execution timeline generation",
       "Priority support",
@@ -94,7 +95,8 @@ export function Pricing() {
             </span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-text-secondary">
-            Start free. Scale as your mixes get better. No hidden fees, no surprises.
+            Start free. Scale as your mixes get better. No hidden fees, no
+            surprises.
           </p>
         </motion.div>
 
@@ -105,7 +107,11 @@ export function Pricing() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{
+                delay: index * 0.08,
+                duration: 0.5,
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
               whileHover={{ y: -4 }}
               className={`relative flex flex-col rounded-2xl border bg-card p-6 transition-all duration-500 ${
                 plan.highlighted
@@ -124,19 +130,27 @@ export function Pricing() {
               <div className="mb-5">
                 <h3 className="text-lg font-semibold text-text">{plan.name}</h3>
                 <div className="mt-2 flex items-baseline gap-0.5">
-                  <span className="text-4xl font-bold text-text">{plan.price}</span>
+                  <span className="text-4xl font-bold text-text">
+                    {plan.price}
+                  </span>
                   {plan.period && (
-                    <span className="text-sm text-text-tertiary">{plan.period}</span>
+                    <span className="text-sm text-text-tertiary">
+                      {plan.period}
+                    </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-text-secondary">{plan.description}</p>
+                <p className="mt-1 text-xs text-text-secondary">
+                  {plan.description}
+                </p>
               </div>
 
               <ul className="mb-6 flex-1 space-y-2.5">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">
                     <Check size={14} className="mt-0.5 shrink-0 text-primary" />
-                    <span className="text-xs text-text-secondary">{feature}</span>
+                    <span className="text-xs text-text-secondary">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
