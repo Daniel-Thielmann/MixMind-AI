@@ -1,20 +1,56 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { Pool } from "pg";
 import { db } from "@/lib/db";
 import * as schema from "@/db/schema";
+
+const databaseUrl = process.env.DATABASE_URL?.trim();
+
+const database = databaseUrl
+  ? new Pool({
+      connectionString: databaseUrl,
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? { rejectUnauthorized: false }
+          : undefined,
+      max: 5,
+    })
+  : drizzleAdapter(db, {
+      provider: "sqlite",
+      schema: {
+        user: schema.user,
+        session: schema.session,
+        account: schema.account,
+        verification: schema.verification,
+      },
+    });
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
-  database: drizzleAdapter(db, {
-    provider: "sqlite",
-    schema: {
-      user: schema.user,
-      session: schema.session,
-      account: schema.account,
-      verification: schema.verification,
+  database,
+  user: {
+    additionalFields: {
+      plan: {
+        type: "string",
+        required: false,
+        defaultValue: "FREE",
+        input: false,
+      },
+      aiCreditsUsed: {
+        type: "number",
+        required: false,
+        defaultValue: 0,
+        input: false,
+      },
+      aiCreditsLimit: {
+        type: "number",
+        required: false,
+        defaultValue: 500,
+        input: false,
+      },
     },
-  }),
+  },
   socialProviders: {
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? { google: { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET } }

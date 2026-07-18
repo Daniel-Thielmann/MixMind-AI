@@ -4,7 +4,9 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import * as schema from "@/db/schema";
 
-const dataDirectory = join(process.cwd(), "data");
+const dataDirectory = process.env.VERCEL
+  ? join("/tmp", "mixmind")
+  : join(process.cwd(), "data");
 mkdirSync(dataDirectory, { recursive: true });
 
 const client = createClient({
