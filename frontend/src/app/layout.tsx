@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/landing/Header";
+import { Header } from "@/components/header/Header";
+import { AuthProvider } from "@/providers/AuthProvider";
+import { ToastProvider } from "@/components/ui/toast";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -20,8 +22,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={geist.className}>
       <body className="flex min-h-screen flex-col bg-background text-text antialiased">
-        <Header />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <AuthProvider>
+          <ToastProvider>
+            <Header />
+            <main className="flex flex-1 flex-col">{children}</main>
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

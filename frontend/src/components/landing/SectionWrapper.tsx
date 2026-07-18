@@ -20,7 +20,7 @@ export function SectionWrapper({ children, className = "", id }: SectionWrapperP
       id={id}
       initial={{ opacity: 0, y: 60 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-      transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as const }}
       className={`w-full ${className}`}
     >
       {children}

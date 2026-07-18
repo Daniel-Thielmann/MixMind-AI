@@ -49,7 +49,7 @@ export function Features() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                transition={{ delay: index * 0.08, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const }}
                 whileHover={{ y: -4 }}
                 className="group rounded-2xl border border-border bg-card p-6 transition-all duration-500 hover:border-primary/20 hover:bg-card-hover hover:shadow-lg hover:shadow-primary/5"
               >

@@ -55,7 +55,7 @@ export function HowItWorks() {
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.12, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{ delay: index * 0.12, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const }}
                   className="group relative rounded-2xl border border-border bg-card p-6 transition-all duration-500 hover:border-primary/20 hover:bg-card-hover"
                 >
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
