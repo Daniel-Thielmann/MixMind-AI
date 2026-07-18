@@ -27,7 +27,7 @@ const SpotifyButton = forwardRef<HTMLButtonElement, SpotifyButtonProps>(
           ref={ref}
           disabled={disabled || loading}
           onClick={onClick}
-          className="flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-text focus-visible:outline-none disabled:pointer-events-none"
+          className={cn("flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-medium text-text focus-visible:outline-none disabled:pointer-events-none", className)}
           {...props}
         >
           {loading ? (

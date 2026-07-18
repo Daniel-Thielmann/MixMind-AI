@@ -10,6 +10,8 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from json_repair import repair_json
+
 from app.core.config import settings
 from app.infrastructure.llm.cache import RecommendationCache, recommendation_cache
 from app.infrastructure.llm.client import LLMClient, OpenAICompatibleLLMClient
@@ -22,7 +24,6 @@ from app.infrastructure.llm.exceptions import (
 )
 from app.infrastructure.llm.metrics import LLMMetricsCollector, llm_metrics
 from app.infrastructure.llm.model_registry import ModelRegistry
-from json_repair import repair_json
 
 logger = logging.getLogger(__name__)
 

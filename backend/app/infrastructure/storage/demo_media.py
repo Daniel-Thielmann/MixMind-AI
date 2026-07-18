@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import json
 import time
-from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-from app.core.config import Settings, settings
-from app.application.dto.demo_media import DemoMediaManifest
 from fastapi import HTTPException, status
+
+from app.application.dto.media import DemoMediaManifest
+from app.core.config import Settings, settings
+
 if TYPE_CHECKING:
     from supabase import Client
 
@@ -17,10 +17,12 @@ MANIFEST_PATH = "demo/manifest.json"
 class DemoMediaService:
     """Reads the private demo manifest and signs its stable object paths."""
 
-    def __init__(self, config: Settings = settings, client: Client | None = None) -> None:
+    def __init__(
+        self, config: Settings = settings, client: Client | None = None
+    ) -> None:
         self.config = config
         self._client = client
-        self._cached: tuple[float, dict[str, Any]] | None = None
+        self._cached: tuple[float, DemoMediaManifest] | None = None
 
     def _storage(self) -> Any:
         if not self.config.SUPABASE_URL or not self.config.SUPABASE_SECRET_KEY:
@@ -43,16 +45,16 @@ class DemoMediaService:
             client = self._client
         return client.storage.from_(self.config.SUPABASE_STORAGE_BUCKET)
 
-    def get_signed_manifest(self) -> dict[str, Any]:
+    def get_signed_manifest(self) -> DemoMediaManifest:
         now = time.time()
         if self._cached and now - self._cached[0] < self.config.DEMO_MANIFEST_CACHE_TTL:
-            return deepcopy(self._cached[1])
+            return self._cached[1].model_copy(deep=True)
 
         storage = self._storage()
         try:
             raw = storage.download(MANIFEST_PATH)
-            parsed = DemoMediaManifest.model_validate_json(raw)
-            paths = [asset.object_path for asset in parsed.assets.values()]
+            manifest = DemoMediaManifest.model_validate_json(raw)
+            paths = [asset.object_path for asset in manifest.assets.values()]
             signed = storage.create_signed_urls(paths, self.config.DEMO_SIGNED_URL_TTL)
         except HTTPException:
             raise
@@ -66,17 +68,16 @@ class DemoMediaService:
             item["path"]: item.get("signedURL") or item.get("signedUrl")
             for item in signed
         }
-        if any(not urls.get(path) for path in paths):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="One or more demonstration assets are unavailable.",
-            )
-        for asset in parsed.assets.values():
-            asset.url = urls[asset.object_path]
-        parsed.expires_at = int(now) + self.config.DEMO_SIGNED_URL_TTL
-        manifest = parsed.model_dump(mode="json", by_alias=True)
+        for asset in manifest.assets.values():
+            asset.url = urls.get(asset.object_path)
+            if not asset.url:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Unable to sign demonstration asset '{asset.object_path}'.",
+                )
+        manifest.expires_at = int(now) + self.config.DEMO_SIGNED_URL_TTL
         self._cached = (now, manifest)
-        return deepcopy(manifest)
+        return manifest.model_copy(deep=True)
 
 
 demo_media_service = DemoMediaService()

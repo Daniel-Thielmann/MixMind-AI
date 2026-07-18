@@ -38,6 +38,7 @@ class TrackResponse(BaseModel):
     key: str
     camelot: str | None
     sample_rate: int
+    owner_id: str
 
     @classmethod
     def from_entity(cls, track: Track) -> TrackResponse:
@@ -50,4 +51,11 @@ class TrackResponse(BaseModel):
             key=track.key,
             camelot=track.camelot.value if track.camelot else None,
             sample_rate=track.sample_rate,
+            owner_id=track.owner_id,
         )
+
+
+class DashboardSummary(BaseModel):
+    tracks_count: int = Field(ge=0)
+    analyses_count: int = Field(ge=0)
+    recent_tracks: list[TrackResponse]

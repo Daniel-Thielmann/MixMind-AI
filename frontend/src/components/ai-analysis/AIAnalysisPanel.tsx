@@ -23,7 +23,7 @@ export function AIAnalysisPanel({
   const isEnded = useMemo(() => currentTime >= duration - 0.5, [currentTime, duration]);
 
   return (
-    <div className="space-y-8">
+    <div className={`space-y-8 transition-opacity ${isPlaying ? "opacity-100" : "opacity-90"}`}>
       <TransitionTimeline
         analysis={analysis}
         currentTime={currentTime}

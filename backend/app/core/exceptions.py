@@ -47,6 +47,14 @@ class InvalidAudioFileException(HTTPException):
         )
 
 
+class InvalidMediaFileException(HTTPException):
+    def __init__(self, filename: str, reason: str = "Invalid media file") -> None:
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{reason}: {filename}",
+        )
+
+
 class FileTooLargeException(HTTPException):
     def __init__(self) -> None:
         super().__init__(

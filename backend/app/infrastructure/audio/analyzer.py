@@ -8,6 +8,7 @@ from typing import ClassVar
 import librosa
 import numpy as np
 import soundfile as sf
+
 from app.core.exceptions import AudioAnalysisException
 from app.core.log_utils import (
     log_memory,

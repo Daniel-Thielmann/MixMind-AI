@@ -4,7 +4,22 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
-REQUIRED_ASSETS = {"trackA", "trackB", "transition", "video", "poster"}
+REQUIRED_DEMO_ASSETS = {"trackA", "trackB", "transition", "video", "poster"}
+
+
+class StoredMedia(BaseModel):
+    filename: str
+    object_path: str
+    content_type: str
+    size_bytes: int = Field(gt=0)
+    checksum_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    url: str | None = None
+
+
+class SignedMediaUrl(BaseModel):
+    object_path: str
+    url: str
+    expires_at: int
 
 
 class DemoMediaAsset(BaseModel):
@@ -14,10 +29,10 @@ class DemoMediaAsset(BaseModel):
     object_path: str = Field(alias="objectPath", min_length=1)
     mime_type: str = Field(alias="mimeType", pattern=r"^(audio|video|image)/")
     size_bytes: int = Field(alias="sizeBytes", gt=0)
+    checksum: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     duration: float | None = Field(default=None, gt=0)
     original_start: float | None = Field(default=None, alias="originalStart", ge=0)
     original_end: float | None = Field(default=None, alias="originalEnd", gt=0)
-    checksum: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     processed_at: datetime = Field(alias="processedAt")
     pipeline_version: str = Field(alias="pipelineVersion", min_length=1)
     url: HttpUrl | None = None
@@ -31,17 +46,17 @@ class DemoMediaAsset(BaseModel):
 
 
 class DemoMediaManifest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(min_length=1)
     title: str = Field(min_length=1)
     relationship: str = Field(min_length=1)
     assets: dict[str, DemoMediaAsset]
     expires_at: int | None = Field(default=None, alias="expiresAt", gt=0)
 
-    model_config = ConfigDict(populate_by_name=True)
-
     @model_validator(mode="after")
     def validate_required_assets(self) -> DemoMediaManifest:
-        missing = REQUIRED_ASSETS - set(self.assets)
+        missing = REQUIRED_DEMO_ASSETS - set(self.assets)
         if missing:
             raise ValueError(f"missing required demo assets: {', '.join(sorted(missing))}")
         expected = {

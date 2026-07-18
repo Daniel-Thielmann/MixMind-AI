@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel, Field
+
 from app.domain.events.track_events import TrackUploaded
 from app.domain.value_objects.bpm import BPM
 from app.domain.value_objects.camelot_key import CamelotKey
 from app.domain.value_objects.duration import Duration
 from app.domain.value_objects.energy import Energy
 from app.domain.value_objects.identifiers import TrackId
-from pydantic import BaseModel, Field
 
 
 class AudioAnalysis(BaseModel):
@@ -52,6 +53,7 @@ class Track:
     key: str = "Unknown"
     camelot: CamelotKey | None = None
     sample_rate: int = 0
+    owner_id: str = "anonymous"
 
     def analyze(self, audio_analysis: AudioAnalysis) -> None:
         self.filename = audio_analysis.filename

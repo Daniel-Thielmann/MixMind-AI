@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from app.application.dto.demo_media import DemoMediaManifest
+from app.application.dto.media import DemoMediaManifest
 from app.core.config import settings
 
 PIPELINE_VERSION = "1.0.0"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Chapter, TransitionZone, Marker, DemoMetadata } from "@/types/video";
+import type { DemoMetadata } from "@/types/video";
 
 interface UseTimelineOptions {
   currentTime: number;

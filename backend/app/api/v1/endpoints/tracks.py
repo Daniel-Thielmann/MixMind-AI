@@ -7,6 +7,7 @@ from app.application.use_cases.track.create.use_case import CreateTrackUseCase
 from app.application.use_cases.track.delete.use_case import DeleteTrackUseCase
 from app.application.use_cases.track.dto import (
     CreateTrackRequest,
+    DashboardSummary,
     TrackResponse,
     UpdateTrackRequest,
 )
@@ -33,6 +34,16 @@ def create_track(
 @router.get("", response_model=list[TrackResponse])
 def list_tracks(repository: TrackRepositoryDependency) -> list[TrackResponse]:
     return ListTracksUseCase(repository).execute()
+
+
+@router.get("/dashboard", response_model=DashboardSummary)
+def dashboard_summary(repository: TrackRepositoryDependency) -> DashboardSummary:
+    tracks = ListTracksUseCase(repository).execute()
+    return DashboardSummary(
+        tracks_count=len(tracks),
+        analyses_count=0,
+        recent_tracks=tracks[-10:][::-1],
+    )
 
 
 @router.get("/{track_id}", response_model=TrackResponse)

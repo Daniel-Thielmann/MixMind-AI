@@ -25,6 +25,7 @@ class TrackMapper:
             key=entity.key,
             camelot=entity.camelot.value if entity.camelot else None,
             sample_rate=entity.sample_rate,
+            owner_id=entity.owner_id,
         )
 
     @staticmethod
@@ -42,4 +43,5 @@ class TrackMapper:
             if model.camelot is not None
             else None,
             sample_rate=model.sample_rate,
+            owner_id=model.owner_id,
         )

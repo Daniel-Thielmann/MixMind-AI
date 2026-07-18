@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+
 from app.infrastructure.audio.analyzer import AudioAnalyzer
 from app.infrastructure.audio.waveform import WaveformGenerator
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
-from typing import Any
 
+from storage3.types import FileOptions
 from supabase import Client, create_client
 
 from app.core.config import Settings, settings
@@ -46,7 +46,7 @@ class SupabaseStorage:
 
     def upload_file(self, local_path: Path, object_path: str) -> str | None:
         content_type = mimetypes.guess_type(local_path.name)[0]
-        options: dict[str, Any] = {"upsert": "false"}
+        options: FileOptions = {"upsert": "false"}
         if content_type:
             options["content-type"] = content_type
 
@@ -70,6 +70,24 @@ class SupabaseStorage:
         if isinstance(signed, dict):
             return signed.get("signedURL") or signed.get("signedUrl")
         return getattr(signed, "signed_url", None)
+
+    def create_signed_url(self, object_path: str, ttl: int | None = None) -> str:
+        signed = self._client.storage.from_(self._bucket).create_signed_url(
+            object_path, ttl or self._signed_url_ttl
+        )
+        if isinstance(signed, dict):
+            url = signed.get("signedURL") or signed.get("signedUrl")
+        else:
+            url = getattr(signed, "signed_url", None)
+        if not url:
+            raise InfrastructureError(f"Unable to sign '{object_path}'")
+        return str(url)
+
+    def remove_file(self, object_path: str) -> None:
+        try:
+            self._client.storage.from_(self._bucket).remove([object_path])
+        except Exception as exc:
+            raise InfrastructureError(f"Unable to remove '{object_path}'") from exc
 
 
 def build_supabase_storage(

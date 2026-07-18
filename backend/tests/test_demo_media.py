@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 
 import pytest
+from fastapi import HTTPException
+
 from app.core.config import settings
 from app.infrastructure.storage.demo_media import DemoMediaService
-from fastapi import HTTPException
 
 
 class FakeStorage:
@@ -19,7 +20,10 @@ class FakeStorage:
 
     def create_signed_urls(self, paths: list[str], ttl: int) -> list[dict[str, str]]:
         assert ttl == 3600
-        return [{"path": path, "signedURL": f"https://media.invalid/{path}?token=private"} for path in paths]
+        return [
+            {"path": path, "signedURL": f"https://media.invalid/{path}?token=private"}
+            for path in paths
+        ]
 
 
 class FakeClient:
@@ -80,10 +84,10 @@ def test_manifest_signs_assets_without_exposing_secret() -> None:
     storage = FakeStorage()
     service = DemoMediaService(configured_settings(), FakeClient(storage))  # type: ignore[arg-type]
     result = service.get_signed_manifest()
-    serialized = json.dumps(result)
-    assert result["assets"]["video"]["url"].startswith("https://media.invalid/")
+    serialized = result.model_dump_json()
+    assert result.assets["video"].url.startswith("https://media.invalid/")
     assert "never-return-this-secret" not in serialized
-    assert result["expiresAt"] > 0
+    assert result.expires_at > 0
 
 
 def test_manifest_uses_private_cache() -> None:

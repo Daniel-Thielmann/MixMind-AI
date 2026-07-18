@@ -63,7 +63,6 @@ export function Demonstration() {
     () => setDemoState("complete"),
     [],
   );
-  const handleReset = useCallback(() => setDemoState("idle"), []);
   const handleVideoState = useCallback(
     (s: VideoState) => setVideoPlaying(s === "playing"),
     [],
@@ -241,7 +240,7 @@ export function Demonstration() {
           transition={{ duration: 0.6 }}
           className="mx-auto max-w-4xl"
         >
-          {manifest ? <div suppressHydrationWarning>
+          {manifest ? <div>
             <MixMindVideoPlayer
               src={manifest.assets.video.url}
               poster={manifest.assets.poster.url}

@@ -7,6 +7,7 @@ import librosa
 import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
+
 from app.core.config import settings
 from app.core.log_utils import log_memory
 from app.domain.value_objects.visualization import WaveformResult

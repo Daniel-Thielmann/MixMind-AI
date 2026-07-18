@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header/Header";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { ToastProvider } from "@/components/ui/toast";
-
-const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MixMind AI — AI-Powered DJ Track Analysis",
@@ -20,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={geist.className}>
+    <html lang="en">
       <body className="flex min-h-screen flex-col bg-background text-text antialiased">
         <AuthProvider>
           <ToastProvider>

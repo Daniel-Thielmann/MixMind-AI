@@ -3,6 +3,11 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.constants import APP_NAME, APP_VERSION
@@ -13,10 +18,6 @@ from app.core.exceptions import (
 )
 from app.core.logging import configure_logging, get_logger
 from app.core.security import build_cors_origins
-from fastapi import FastAPI, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 logger = get_logger(__name__)
 

@@ -20,6 +20,9 @@ export interface CompatibilityResult {
 
 export interface ImageAsset {
   image_path: string;
+  url?: string | null;
+  width?: number;
+  height?: number;
 }
 
 export interface TrackMediaAssets {

@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -99,6 +100,7 @@ function ImageBlock({
   image?: ImageAsset;
   alt: string;
 }) {
+  const mediaUrl = image?.url || (image?.image_path ? resolveMediaUrl(image.image_path) : null);
   return (
     <figure>
       <figcaption className="mb-2 text-xs uppercase tracking-[0.18em] text-text-secondary">
@@ -106,16 +108,16 @@ function ImageBlock({
       </figcaption>
 
       <div className="overflow-hidden rounded-lg border border-zinc-800 bg-black/40">
-        {image?.image_path ? (
+        {mediaUrl ? (
           <img
-            src={resolveMediaUrl(image.image_path)}
+            src={mediaUrl}
             alt={alt}
             loading="lazy"
             className="block w-full object-contain"
             onError={(e) => {
               console.error(
                 "Failed to load image:",
-                resolveMediaUrl(image.image_path),
+                mediaUrl,
               );
               e.currentTarget.style.display = "none";
             }}

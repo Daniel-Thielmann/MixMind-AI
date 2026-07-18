@@ -4,6 +4,9 @@ from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
 
+from fastapi import UploadFile
+from fastapi.testclient import TestClient
+
 from app.application.dto.api import UploadAnalysisResponse
 from app.application.use_cases.analysis.analyze_track import AnalysisService
 from app.domain.entities.track import AudioAnalysis
@@ -23,8 +26,6 @@ from app.infrastructure.llm.schemas import (
     TempoAnalysis,
 )
 from app.main import app
-from fastapi import UploadFile
-from fastapi.testclient import TestClient
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,4 +1,5 @@
 import pytest
+
 from app.domain.aggregates.analysis import Analysis, AnalysisCollection
 from app.domain.aggregates.mix import Mix
 from app.domain.entities.track import AudioAnalysis

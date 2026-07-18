@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     SUPABASE_SIGNED_URL_TTL: int = Field(default=3600, ge=60, le=604800)
 
     MAX_UPLOAD_SIZE: int = Field(default=100, ge=1, le=500)
+    INTERNAL_AUTH_SECRET: str = Field(default="", repr=False)
 
     BASE_URL: str = Field(default="http://localhost:8000")
 

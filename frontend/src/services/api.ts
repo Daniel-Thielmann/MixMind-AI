@@ -1,17 +1,11 @@
 import type { UploadAnalysisResponse } from "@/types";
 
-import { getApiUrl } from "./api-config";
-
-const ANALYZE_ENDPOINT = "/api/v1/analysis/analyze";
+const ANALYZE_ENDPOINT = "/api/analyze";
 const FRIENDLY_ERROR_MESSAGE =
   "Unable to analyze the selected tracks. Please try again.";
 
 export class ApiService {
-  private readonly baseUrl: string;
-
-  constructor(baseUrl?: string) {
-    this.baseUrl = (baseUrl ?? getApiUrl()).replace(/\/$/, "");
-  }
+  constructor(private readonly baseUrl = "") {}
 
   async analyzeTracks(
     trackA: File,

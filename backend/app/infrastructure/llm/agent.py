@@ -6,6 +6,8 @@ import logging
 import time
 from typing import Any
 
+from pydantic import ValidationError
+
 from app.application.dto.api import UploadAnalysisResponse
 from app.application.use_cases.compatibility.score_mix import (
     MixScore,
@@ -26,7 +28,6 @@ from app.infrastructure.llm.recommendation_assembler import (
     recommendation_assembler,
 )
 from app.infrastructure.llm.text_schemas import AITextRecommendation
-from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
