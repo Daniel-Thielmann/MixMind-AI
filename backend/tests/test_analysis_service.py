@@ -1,3 +1,4 @@
+import struct
 from io import BytesIO
 from pathlib import Path
 
@@ -16,6 +17,28 @@ from app.infrastructure.llm.schemas import (
 from fastapi import UploadFile
 
 
+def _write_silent_wav(
+    path: Path, sample_rate: int = 44100, duration_secs: float = 0.5
+) -> None:
+    num_samples = int(sample_rate * duration_secs)
+    data_size = num_samples * 2
+    with path.open("wb") as f:
+        f.write(b"RIFF")
+        f.write(struct.pack("<I", 36 + data_size))
+        f.write(b"WAVE")
+        f.write(b"fmt ")
+        f.write(struct.pack("<I", 16))
+        f.write(struct.pack("<H", 1))
+        f.write(struct.pack("<H", 1))
+        f.write(struct.pack("<I", sample_rate))
+        f.write(struct.pack("<I", sample_rate * 2))
+        f.write(struct.pack("<H", 2))
+        f.write(struct.pack("<H", 16))
+        f.write(b"data")
+        f.write(struct.pack("<I", data_size))
+        f.write(b"\x00\x00" * num_samples)
+
+
 class FakeStorageService:
     def __init__(self, path_a: Path, path_b: Path) -> None:
         self._paths = [path_a, path_b]
@@ -24,13 +47,12 @@ class FakeStorageService:
     def save_audio(self, file: UploadFile) -> Path:
         path = self._paths[self._index]
         self._index += 1
-        path.write_bytes(file.file.read() or b"audio")
-        file.file.seek(0)
+        _write_silent_wav(path)
         return path
 
 
 class FakeAudioAnalyzer:
-    def analyze(self, audio_path: Path) -> AudioAnalysis:
+    def analyze(self, audio_path: Path, **kwargs: object) -> AudioAnalysis:
         return AudioAnalysis(
             filename=audio_path.name,
             duration=3.0,
@@ -62,7 +84,7 @@ class FakeWaveformGenerator:
         self._output_paths = output_paths
         self._index = 0
 
-    def generate(self, audio_path: Path) -> WaveformResult:
+    def generate(self, audio_path: Path, **kwargs: object) -> WaveformResult:
         image_path = self._output_paths[self._index]
         self._index += 1
         return WaveformResult(image_path=image_path, width=1200, height=300)
@@ -73,7 +95,7 @@ class FakeSpectrogramGenerator:
         self._output_paths = output_paths
         self._index = 0
 
-    def generate(self, audio_path: Path) -> SpectrogramResult:
+    def generate(self, audio_path: Path, **kwargs: object) -> SpectrogramResult:
         image_path = self._output_paths[self._index]
         self._index += 1
         return SpectrogramResult(image_path=image_path, width=1200, height=500)

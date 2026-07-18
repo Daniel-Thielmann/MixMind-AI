@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from app.domain.events.mix_events import RecommendationGenerated
+from app.domain.value_objects.confidence_score import ConfidenceScore
+from app.domain.value_objects.identifiers import MixId
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -127,3 +134,35 @@ class AIRecommendationResponse(BaseModel):
     ai_fallback_occurred: bool = Field(
         default=False, description="Whether a fallback response was used."
     )
+
+    def to_confidence_score(self) -> ConfidenceScore:
+        return ConfidenceScore(value=self.confidence)
+
+    def to_generated_event(
+        self, mix_id: str, analysis_id: str
+    ) -> RecommendationGenerated:
+        return RecommendationGenerated(
+            mix_id=mix_id,
+            analysis_id=analysis_id,
+            confidence=self.confidence,
+        )
+
+
+@dataclass
+class Recommendation:
+    mix_id: MixId = field(default_factory=MixId)
+    confidence: ConfidenceScore | None = None
+    summary: str = ""
+    mix_direction: str = ""
+    transition_quality: str = ""
+    transition_type: str = ""
+    dj_score: int = 0
+    mix_difficulty: str = "Medium"
+    risk_level: str = "Medium"
+
+    def to_generated_event(self, analysis_id: str) -> RecommendationGenerated:
+        return RecommendationGenerated(
+            mix_id=str(self.mix_id),
+            analysis_id=analysis_id,
+            confidence=self.confidence.value if self.confidence else 0,
+        )

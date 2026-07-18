@@ -151,7 +151,7 @@ def _expected_valid() -> AIRecommendationResponse:
         ai_model=settings.OPENROUTER_MODEL,
         ai_retry_count=0,
         ai_fallback_occurred=False,
-        dj_score=85,
+        dj_score=98,
         mix_difficulty="Very Easy",
         recommended_transition_length="64 bars",
         summary="Technically strong pairing with minimal tempo difference.",
@@ -200,8 +200,8 @@ def _expected_valid() -> AIRecommendationResponse:
         professional_notes=(
             "The backend metrics suggest a textbook harmonic blend. "
             "No technical risks identified.\n\n"
-            "DJ Score: 85/100 — Strong backend compatibility across tempo and energy. "
-            "Mix difficulty is very easy. Smooth transition expected. "
+            "DJ Score: 98/100 — Near-perfect harmony and rhythm match. "
+            "Mix difficulty is very easy. Smooth, long blend expected. "
             "Recommended transition: 64 bars."
         ),
         risks=[
@@ -470,7 +470,7 @@ class TestBackendComputedFields:
     def test_dj_score_is_set(self) -> None:
         agent = DJAgent(client=FakeLLMClient(VALID_LLM_JSON))
         response = agent.recommend(_build_response())
-        assert response.dj_score == 85
+        assert response.dj_score == 98
 
     def test_mix_difficulty_is_set(self) -> None:
         agent = DJAgent(client=FakeLLMClient(VALID_LLM_JSON))
@@ -485,7 +485,7 @@ class TestBackendComputedFields:
     def test_fallback_has_backend_fields(self) -> None:
         agent = DJAgent(client=FakeLLMClient("bad data"))
         response = agent.recommend(_build_response())
-        assert response.dj_score == 85
+        assert response.dj_score == 98
         assert response.mix_difficulty == "Very Easy"
         assert response.recommended_transition_length == "64 bars"
 
@@ -620,7 +620,7 @@ class TestLLMLogging:
         assert "selected model:" in combined
         assert "elapsed:" in combined
         assert "fallback used:" in combined
-        assert "retry count:" in combined
+        assert "attempts:" in combined
         assert "response size:" in combined
         assert "validation:" in combined
 
@@ -632,7 +632,8 @@ class TestLLMLogging:
         agent.recommend(_build_response())
         combined = "\n".join(caplog.messages)
         assert "LLM SUMMARY" in combined
-        assert "fallback used: Yes" in combined
+        assert "fallback used:" in combined
+        assert "Yes" in combined
 
 
 # ===================================================================

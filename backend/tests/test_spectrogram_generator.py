@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import numpy as np
 import soundfile as sf
 from app.infrastructure.audio.spectrogram import SpectrogramGenerator
 
 
-def test_spectrogram_generator_creates_png_and_directory(tmp_path, monkeypatch) -> None:
+def test_spectrogram_generator_creates_png_and_directory(tmp_path) -> None:
     audio_path = tmp_path / "track.wav"
     sample_rate = 44100
     duration_seconds = 1.0
@@ -17,39 +19,14 @@ def test_spectrogram_generator_creates_png_and_directory(tmp_path, monkeypatch) 
     stereo = np.column_stack([waveform, waveform])
     sf.write(audio_path, stereo, sample_rate)
 
-    from app.infrastructure.audio import base_image_generator
-
-    processed_root = tmp_path / "processed"
-    monkeypatch.setattr(
-        base_image_generator,
-        "settings",
-        type(
-            "SettingsStub",
-            (),
-            {
-                "processed_path": processed_root,
-                "analysis_path": processed_root / "analysis",
-                "BASE_URL": "http://localhost:8000",
-            },
-        )(),
-    )
-
-    generator = SpectrogramGenerator()
-    analysis_id = "test-session-xyz"
-    result = generator.generate(audio_path, analysis_id, "b")
-
-    generated_path = (
-        processed_root / "analysis" / analysis_id / "spectrogram_track_b.png"
-    )
-
-    assert processed_root.joinpath("analysis", analysis_id).exists()
-    assert generated_path.exists()
-    assert (
-        result.image_path == f"processed/analysis/{analysis_id}/spectrogram_track_b.png"
-    )
-    assert result.width == 1200
-    assert result.height == 500
+    generator = SpectrogramGenerator(output_dir=tmp_path / "spectrograms")
+    result = generator.generate(audio_path)
 
     from PIL import Image
+
+    generated_path = tmp_path / "spectrograms" / Path(result.image_path).name
+    assert generated_path.exists()
+    assert result.width == 1200
+    assert result.height == 500
 
     assert Image.open(generated_path).size == (1200, 500)

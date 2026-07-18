@@ -5,6 +5,7 @@ class WaveformResult(BaseModel):
     image_path: str = Field(description="Relative path to the generated PNG.")
     width: int = Field(description="Image width in pixels.")
     height: int = Field(description="Image height in pixels.")
+    url: str | None = Field(default=None, description="Public URL for the image.")
 
 
 class Waveforms(BaseModel):
@@ -16,6 +17,7 @@ class SpectrogramResult(BaseModel):
     image_path: str = Field(description="Relative path to the generated PNG.")
     width: int = Field(description="Image width in pixels.")
     height: int = Field(description="Image height in pixels.")
+    url: str | None = Field(default=None, description="Public URL for the image.")
 
 
 class Spectrograms(BaseModel):

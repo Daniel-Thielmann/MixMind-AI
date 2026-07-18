@@ -11,6 +11,7 @@ def test_compare_returns_high_compatibility_for_similar_tracks() -> None:
         sample_rate=44100,
         bpm=128.01,
         energy=0.1823,
+        camelot="1A",
     )
     track_b = AudioAnalysis(
         filename="Spaceman.mp3",
@@ -18,6 +19,7 @@ def test_compare_returns_high_compatibility_for_similar_tracks() -> None:
         sample_rate=44100,
         bpm=127.94,
         energy=0.1907,
+        camelot="1A",
     )
 
     result = service.compare(track_a, track_b)

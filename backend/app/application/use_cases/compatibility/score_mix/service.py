@@ -116,9 +116,9 @@ class MixScoringService:
             and energy_difference <= 0.20
         ):
             return "Medium"
-        if tempo_difference <= 12.0 or compatibility_score <= 30.0:
-            return "Hard"
-        return "Expert"
+        if tempo_difference > 12.0 and compatibility_score <= 30.0:
+            return "Expert"
+        return "Hard"
 
     # Transition Length
     @staticmethod

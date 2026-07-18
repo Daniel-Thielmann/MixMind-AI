@@ -10,7 +10,7 @@ from uuid import uuid4
 import librosa
 import numpy as np
 from app.application.dto.api import AnalysisMetadata, UploadAnalysisResponse
-from app.application.use_cases.compatibility.compare_tracks import (
+from app.application.use_cases.compatibility.compare_tracks.service import (
     CompatibilityService,
     compatibility_service,
 )

@@ -1,4 +1,5 @@
 import json
+import struct
 from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
@@ -30,19 +31,40 @@ from fastapi.testclient import TestClient
 # ---------------------------------------------------------------------------
 
 
+def _write_silent_wav(
+    path: Path, sample_rate: int = 44100, duration_secs: float = 0.5
+) -> None:
+    num_samples = int(sample_rate * duration_secs)
+    data_size = num_samples * 2
+    with path.open("wb") as f:
+        f.write(b"RIFF")
+        f.write(struct.pack("<I", 36 + data_size))
+        f.write(b"WAVE")
+        f.write(b"fmt ")
+        f.write(struct.pack("<I", 16))
+        f.write(struct.pack("<H", 1))
+        f.write(struct.pack("<H", 1))
+        f.write(struct.pack("<I", sample_rate))
+        f.write(struct.pack("<I", sample_rate * 2))
+        f.write(struct.pack("<H", 2))
+        f.write(struct.pack("<H", 16))
+        f.write(b"data")
+        f.write(struct.pack("<I", data_size))
+        f.write(b"\x00\x00" * num_samples)
+
+
 class FakeStorage:
     def __init__(self, base: Path) -> None:
         self._base = base
 
     def save_audio(self, file: UploadFile) -> Path:
         path = self._base / (file.filename or "tmp.wav")
-        path.write_bytes(file.file.read() or b"data")
-        file.file.seek(0)
+        _write_silent_wav(path)
         return path
 
 
 class FakeAnalyzer:
-    def analyze(self, audio_path: Path) -> AudioAnalysis:
+    def analyze(self, audio_path: Path, **kwargs: object) -> AudioAnalysis:
         return AudioAnalysis(
             filename=audio_path.name,
             duration=3.0,
@@ -67,40 +89,52 @@ class FakeCompat:
         )
 
 
-def make_fake_waveform(
-    analysis_id: str, track_label: str, base_url: str
-) -> WaveformResult:
-    return WaveformResult(
-        image_path=f"processed/analysis/{analysis_id}/waveform_track_{track_label}.png",
-        url=f"{base_url}/static/analysis/{analysis_id}/waveform_track_{track_label}.png",
-        width=1200,
-        height=300,
-    )
-
-
-def make_fake_spectrogram(
-    analysis_id: str, track_label: str, base_url: str
-) -> SpectrogramResult:
-    return SpectrogramResult(
-        image_path=f"processed/analysis/{analysis_id}/spectrogram_track_{track_label}.png",
-        url=f"{base_url}/static/analysis/{analysis_id}/spectrogram_track_{track_label}.png",
-        width=1200,
-        height=500,
-    )
-
-
 class FakeWaveformGen:
-    def generate(
-        self, audio_path: Path, analysis_id: str, track_label: str
-    ) -> WaveformResult:
-        return make_fake_waveform(analysis_id, track_label, "http://localhost:8000")
+    def generate(self, audio_path: Path, **kwargs: object) -> WaveformResult:
+        return WaveformResult(
+            image_path="processed/analysis/test/waveform.png",
+            width=1200,
+            height=300,
+        )
 
 
 class FakeSpectrogramGen:
-    def generate(
-        self, audio_path: Path, analysis_id: str, track_label: str
-    ) -> SpectrogramResult:
-        return make_fake_spectrogram(analysis_id, track_label, "http://localhost:8000")
+    def generate(self, audio_path: Path, **kwargs: object) -> SpectrogramResult:
+        return SpectrogramResult(
+            image_path="processed/analysis/test/spectrogram.png",
+            width=1200,
+            height=500,
+        )
+
+
+class FakeDJAgent:
+    def recommend(self, response: UploadAnalysisResponse) -> AIRecommendationResponse:
+        return AIRecommendationResponse(
+            summary="",
+            mix_direction="",
+            transition_quality="",
+            transition_type="",
+            confidence=0,
+            tempo_analysis=TempoAnalysis(difference="", recommendation=""),
+            energy_analysis=EnergyAnalysis(difference="", recommendation=""),
+            compatibility_analysis=CompatibilityAnalysis(score="", interpretation=""),
+            mix_strategy=MixStrategy(
+                before_transition="", during_transition="", after_transition=""
+            ),
+            dj_execution=DJExecution(
+                loop="",
+                eq="",
+                filter="",
+                tempo_fader="",
+                phrase_matching="",
+                cue_point="",
+            ),
+            club_tip="",
+            professional_notes="",
+            risks=[],
+            best_use_case="",
+            risk_level="",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -121,6 +155,7 @@ class TestAnalysisSession:
                 waveform_service=FakeWaveformGen(),
                 spectrogram_service=FakeSpectrogramGen(),
                 compatibility=FakeCompat(),
+                ai_agent=FakeDJAgent(),
             )
 
             ta = UploadFile(filename="a.wav", file=BytesIO(b"a"))
@@ -133,16 +168,20 @@ class TestAnalysisSession:
         assert len(ids) == 10  # all unique
 
     def test_analysis_creates_session_folder(self, tmp_path, monkeypatch) -> None:
-        from app.application.use_cases.analysis import analyze_track as module
+        from app.application.use_cases.analysis.analyze_track import (
+            service as analyze_service_module,
+        )
 
         processed_root = tmp_path / "processed"
         monkeypatch.setattr(
-            module,
+            analyze_service_module,
             "settings",
             SimpleNamespace(
                 analysis_path=processed_root / "analysis",
                 BASE_URL="http://testserver",
                 processed_path=processed_root,
+                upload_path=tmp_path / "uploads",
+                temp_path=tmp_path / "temp",
             ),
         )
 
@@ -152,6 +191,7 @@ class TestAnalysisSession:
             waveform_service=FakeWaveformGen(),
             spectrogram_service=FakeSpectrogramGen(),
             compatibility=FakeCompat(),
+            ai_agent=FakeDJAgent(),
         )
 
         ta = UploadFile(filename="a.wav", file=BytesIO(b"a"))
@@ -163,16 +203,20 @@ class TestAnalysisSession:
         assert folder.is_dir()
 
     def test_analysis_json_is_generated(self, tmp_path, monkeypatch) -> None:
-        from app.application.use_cases.analysis import analyze_track as module
+        from app.application.use_cases.analysis.analyze_track import (
+            service as analyze_service_module,
+        )
 
         processed_root = tmp_path / "processed"
         monkeypatch.setattr(
-            module,
+            analyze_service_module,
             "settings",
             SimpleNamespace(
                 analysis_path=processed_root / "analysis",
                 BASE_URL="http://testserver",
                 processed_path=processed_root,
+                upload_path=tmp_path / "uploads",
+                temp_path=tmp_path / "temp",
             ),
         )
 
@@ -182,6 +226,7 @@ class TestAnalysisSession:
             waveform_service=FakeWaveformGen(),
             spectrogram_service=FakeSpectrogramGen(),
             compatibility=FakeCompat(),
+            ai_agent=FakeDJAgent(),
         )
 
         ta = UploadFile(filename="a.wav", file=BytesIO(b"a"))
@@ -200,16 +245,20 @@ class TestAnalysisSession:
         assert "spectrograms" in data
 
     def test_analysis_json_contains_all_fields(self, tmp_path, monkeypatch) -> None:
-        from app.application.use_cases.analysis import analyze_track as module
+        from app.application.use_cases.analysis.analyze_track import (
+            service as analyze_service_module,
+        )
 
         processed_root = tmp_path / "processed"
         monkeypatch.setattr(
-            module,
+            analyze_service_module,
             "settings",
             SimpleNamespace(
                 analysis_path=processed_root / "analysis",
                 BASE_URL="http://testserver",
                 processed_path=processed_root,
+                upload_path=tmp_path / "uploads",
+                temp_path=tmp_path / "temp",
             ),
         )
 
@@ -219,6 +268,7 @@ class TestAnalysisSession:
             waveform_service=FakeWaveformGen(),
             spectrogram_service=FakeSpectrogramGen(),
             compatibility=FakeCompat(),
+            ai_agent=FakeDJAgent(),
         )
 
         ta = UploadFile(filename="a.wav", file=BytesIO(b"a"))
@@ -234,8 +284,8 @@ class TestAnalysisSession:
         assert "energy" in data["track_a"]
         assert "duration" in data["track_a"]
         assert "compatibility_score" in data["compatibility"]
-        assert "url" in data["waveforms"]["track_a"]
-        assert "url" in data["spectrograms"]["track_a"]
+        assert "image_path" in data["waveforms"]["track_a"]
+        assert "image_path" in data["spectrograms"]["track_a"]
 
 
 class TestPublicUrls:
