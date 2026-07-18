@@ -12,33 +12,12 @@ const VIDEO_ID = "GtSCkHk9fLw";
 const START_SEC = 18600;
 const END_SEC = 18764;
 
-declare global {
-  interface Window {
-    YT: {
-      Player: new (id: string, opts: YTPlayerOptions) => YTPlayer;
-      PlayerState: { PLAYING: number; PAUSED: number; ENDED: number; BUFFERING: number };
-    };
-    onYouTubeIframeAPIReady: (() => void) | undefined;
-  }
-}
-
 interface YTPlayer {
   playVideo: () => void;
   pauseVideo: () => void;
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   getCurrentTime: () => number;
   destroy: () => void;
-}
-
-interface YTPlayerOptions {
-  height: string;
-  width: string;
-  videoId: string;
-  playerVars?: Record<string, string | number | undefined>;
-  events?: {
-    onStateChange?: (event: { data: number }) => void;
-    onReady?: () => void;
-  };
 }
 
 export function VideoDemo({ onPlayStateChange, onTimeUpdate }: VideoDemoProps) {
