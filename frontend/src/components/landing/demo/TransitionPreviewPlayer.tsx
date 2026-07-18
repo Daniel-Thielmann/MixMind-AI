@@ -8,12 +8,22 @@ interface TransitionPreviewPlayerProps {
   artist: string;
   bpmA: number;
   bpmB: number;
+  bpmC?: number;
   camelotA: string;
   camelotB: string;
+  camelotC?: string;
   compatibility: number;
   generatedTime: string;
   color: string;
   audioSrc?: string;
+  stages?: Array<{
+    time: number;
+    label: string;
+    description: string;
+    color: string;
+  }>;
+  onTimeUpdate?: (time: number) => void;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 function fmt(t: number) {
@@ -27,12 +37,17 @@ export function TransitionPreviewPlayer({
   artist,
   bpmA,
   bpmB,
+  bpmC,
   camelotA,
   camelotB,
+  camelotC,
   compatibility,
   generatedTime,
   color,
   audioSrc,
+  stages = [],
+  onTimeUpdate,
+  onPlayingChange,
 }: TransitionPreviewPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -119,6 +134,25 @@ export function TransitionPreviewPlayer({
   const idleHeights = bars.map((h) => h * 0.3);
   const displayHeights = playing ? heights : idleHeights;
   const progress = audioDuration > 0 ? currentTime / audioDuration : 0;
+
+  useEffect(() => {
+    onTimeUpdate?.(currentTime);
+  }, [currentTime, onTimeUpdate]);
+
+  useEffect(() => {
+    onPlayingChange?.(playing);
+  }, [onPlayingChange, playing]);
+  const activeStageIndex = stages.reduce(
+    (active, stage, index) => currentTime >= stage.time ? index : active,
+    0,
+  );
+
+  const seekToStage = useCallback((time: number) => {
+    if (!audioRef.current) return;
+    const nextTime = Math.min(time, audioDuration);
+    audioRef.current.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  }, [audioDuration]);
 
   return (
     <motion.div
@@ -227,7 +261,7 @@ export function TransitionPreviewPlayer({
           <div
             ref={seekRef}
             onClick={handleSeek}
-            className="group/seeker relative mb-4 h-2 cursor-pointer overflow-hidden rounded-full bg-zinc-800"
+            className="group/seeker relative mb-4 h-2 cursor-pointer rounded-full bg-zinc-800"
           >
             <motion.div
               animate={{ width: `${progress * 100}%` }}
@@ -241,6 +275,23 @@ export function TransitionPreviewPlayer({
               className="absolute top-1/2 -mt-1.5 h-3 w-3 -ml-1.5 rounded-full opacity-0 transition-opacity duration-200 group-hover/seeker:opacity-100"
               style={{ backgroundColor: color }}
             />
+            {stages.map((stage) => (
+              <button
+                key={`${stage.time}-${stage.label}`}
+                type="button"
+                aria-label={`Jump to ${stage.label} at ${fmt(stage.time)}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  seekToStage(stage.time);
+                }}
+                className="absolute top-1/2 z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background transition-transform hover:scale-125"
+                style={{
+                  left: `${audioDuration > 0 ? (stage.time / audioDuration) * 100 : 0}%`,
+                  backgroundColor: stage.color,
+                  boxShadow: `0 0 12px ${stage.color}80`,
+                }}
+              />
+            ))}
           </div>
 
           <div className="-mt-2 mb-4 flex items-center justify-between text-[10px] text-text-tertiary">
@@ -248,9 +299,35 @@ export function TransitionPreviewPlayer({
             <span>{fmt(audioDuration)}</span>
           </div>
 
+          {stages.length > 0 ? (
+            <div className="mb-5 grid gap-2 sm:grid-cols-3">
+              {stages.map((stage, index) => {
+                const active = index === activeStageIndex;
+                return (
+                  <button
+                    key={`${stage.label}-${stage.time}`}
+                    type="button"
+                    onClick={() => seekToStage(stage.time)}
+                    className="rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5"
+                    style={{
+                      borderColor: active ? stage.color : `${stage.color}30`,
+                      backgroundColor: active ? `${stage.color}18` : `${stage.color}08`,
+                      boxShadow: active ? `0 0 20px ${stage.color}20` : undefined,
+                    }}
+                  >
+                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: stage.color }}>
+                      {fmt(stage.time)} · {stage.label}
+                    </span>
+                    <span className="mt-1 block text-xs text-text-secondary">{stage.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <MetricBox label="BPM" value={`${bpmA} → ${bpmB}`} highlight={false} />
-            <MetricBox label="Camelot" value={`${camelotA} → ${camelotB}`} highlight={false} />
+            <MetricBox label="BPM" value={[bpmA, bpmB, bpmC].filter(Boolean).join(" → ")} highlight={false} />
+            <MetricBox label="Camelot" value={[camelotA, camelotB, camelotC].filter(Boolean).join(" → ")} highlight={false} />
             <MetricBox label="Transition" value="Excellent" highlight={true} color={color} />
             <MetricBox label="AI Confidence" value="96%" highlight={true} color={color} />
           </div>

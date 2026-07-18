@@ -16,7 +16,8 @@ import { useDemoMedia } from "@/hooks/useDemoMedia";
 type DemoState = "idle" | "processing" | "complete";
 
 const MixMindVideoPlayer = dynamic(
-  () => import("@/components/video").then((module) => module.MixMindVideoPlayer),
+  () =>
+    import("@/components/video").then((module) => module.MixMindVideoPlayer),
   {
     ssr: false,
     loading: () => (
@@ -25,28 +26,36 @@ const MixMindVideoPlayer = dynamic(
   },
 );
 
-const buildTracks = (trackA: string, trackB: string) => ({
+const buildTracks = (trackA: string, trackB: string, trackC: string) => ({
   a: {
     label: "Track A",
     title: "Love Me Again (Again) (Wh0 Remix)",
     artist: "John Newman",
     bpm: 124,
     camelot: "8A",
-    duration: "2:10–3:10",
+    duration: "1:45–2:45",
     accentColor: "#44f3d0",
     audioSrc: trackA,
-    previewStartSeconds: 130,
-    previewEndSeconds: 190,
   },
   b: {
     label: "Track B",
-    title: "You Don't Know Me (Radio Edit)",
-    artist: "Armand van Helden ft. Duane Harden",
+    title: "Set Me Free feat. Robert Courtois (Franky Rizardo Extended Remix)",
+    artist: "Robert Courtois · Franky Rizardo",
     bpm: 126,
     camelot: "8B",
-    duration: "3:52",
+    duration: "0:45–1:45",
     accentColor: "#3b82f6",
     audioSrc: trackB,
+  },
+  c: {
+    label: "Track C",
+    title: "You Don't Know Me (Radio Edit)",
+    artist: "Armand van Helden ft. Duane Harden",
+    bpm: 128,
+    camelot: "9B",
+    duration: "0:00–1:00",
+    accentColor: "#a855f7",
+    audioSrc: trackC,
   },
 });
 
@@ -54,10 +63,13 @@ export function Demonstration() {
   const [demoState, setDemoState] = useState<DemoState>("idle");
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [videoTime, setVideoTime] = useState(0);
+  const [transitionPlaying, setTransitionPlaying] = useState(false);
+  const [transitionTime, setTransitionTime] = useState(0);
   const { targetRef, manifest, loading, error, retry } = useDemoMedia();
   const tracks = buildTracks(
-    manifest?.assets.trackB.url ?? "",
     manifest?.assets.trackA.url ?? "",
+    manifest?.assets.trackB.url ?? "",
+    manifest?.assets.trackC.url ?? "",
   );
 
   const handleGenerate = useCallback(() => setDemoState("processing"), []);
@@ -70,6 +82,8 @@ export function Demonstration() {
     [],
   );
   const handleVideoTime = useCallback((t: number) => setVideoTime(t), []);
+  const activeTransitionTrack =
+    transitionTime < 70 ? "a" : transitionTime < 130 ? "b" : "c";
 
   return (
     <SectionWrapper id="demo" className="py-24 md:py-32">
@@ -92,130 +106,172 @@ export function Demonstration() {
             </span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-text-secondary">
-            Drop two tracks and let MixMind&apos;s AI generate a seamless
-            transition — before you ever touch the decks.
+            Keep uploading tracks, generate ready-to-play transition previews,
+            and blend them together to build your complete set.
           </p>
         </motion.div>
 
         {(loading || error || !manifest) && (
           <div className="mb-12 flex min-h-48 items-center justify-center rounded-2xl border border-border bg-card/50 p-8 text-center">
             {loading ? (
-              <p className="animate-pulse text-sm text-text-secondary">Loading real demonstration media…</p>
+              <p className="animate-pulse text-sm text-text-secondary">
+                Loading real demonstration media…
+              </p>
             ) : error ? (
-              <div><p className="text-sm text-text-secondary">{error}</p><button type="button" onClick={() => void retry()} className="mt-4 rounded-lg border border-border px-4 py-2 text-sm text-text">Try again</button></div>
+              <div>
+                <p className="text-sm text-text-secondary">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => void retry()}
+                  className="mt-4 rounded-lg border border-border px-4 py-2 text-sm text-text"
+                >
+                  Try again
+                </button>
+              </div>
             ) : (
-              <p className="text-sm text-text-secondary">The demonstration loads when this section enters view.</p>
+              <p className="text-sm text-text-secondary">
+                The demonstration loads when this section enters view.
+              </p>
             )}
           </div>
         )}
 
-        {manifest && <AnimatePresence mode="wait">
-          {demoState === "idle" && (
-            <motion.div
-              key="idle"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-              className="space-y-8"
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <TrackUploadCard {...tracks.a} />
-                <TrackUploadCard {...tracks.b} />
-              </div>
-
+        {manifest && (
+          <AnimatePresence mode="wait">
+            {demoState === "idle" && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-center"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleGenerate}
-                  className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-background shadow-lg shadow-primary/20 transition-all duration-300 hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                  </svg>
-                  Generate Transition Preview
-                </motion.button>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {demoState === "processing" && (
-            <ProcessingPipeline
-              key="processing"
-              onComplete={handleProcessingComplete}
-            />
-          )}
-
-          {demoState === "complete" && (
-            <motion.div
-              key="complete"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-8"
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <TrackUploadCard {...tracks.a} compact />
-                <TrackUploadCard {...tracks.b} compact />
-              </div>
-
-              <TransitionPreviewPlayer
-                title="AI Generated Transition"
-                artist="MixMind AI · Claptone-Inspired Blend"
-                bpmA={tracks.a.bpm}
-                bpmB={tracks.b.bpm}
-                camelotA={tracks.a.camelot}
-                camelotB={tracks.b.camelot}
-                compatibility={98}
-                generatedTime="Generated in 3.2s"
-                color="#44f3d0"
-                audioSrc={manifest.assets.transition.url}
-              />
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="mx-auto max-w-2xl text-center text-sm leading-relaxed text-text-secondary"
-              >
-                The AI combined both tracks using harmonic compatibility, phrase
-                alignment and energy analysis to generate a seamless transition
-                preview before your live performance.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
+                key="idle"
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex justify-center"
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                className="space-y-8"
               >
-                <FeatureBadge />
-              </motion.div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <TrackUploadCard {...tracks.a} />
+                  <TrackUploadCard {...tracks.b} />
+                  <TrackUploadCard {...tracks.c} />
+                </div>
 
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleGenerate}
+                    className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-background shadow-lg shadow-primary/20 transition-all duration-300 hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/30"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                    Generate Transition Preview
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {demoState === "processing" && (
+              <ProcessingPipeline
+                key="processing"
+                onComplete={handleProcessingComplete}
+              />
+            )}
+
+            {demoState === "complete" && (
               <motion.div
+                key="complete"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="text-center"
-              ></motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>}
+                transition={{ duration: 0.5 }}
+                className="space-y-8"
+              >
+                <div className="grid gap-4 md:grid-cols-3">
+                  <TrackUploadCard
+                    {...tracks.a}
+                    compact
+                    active={transitionPlaying && activeTransitionTrack === "a"}
+                  />
+                  <TrackUploadCard
+                    {...tracks.b}
+                    compact
+                    active={transitionPlaying && activeTransitionTrack === "b"}
+                  />
+                  <TrackUploadCard
+                    {...tracks.c}
+                    compact
+                    active={transitionPlaying && activeTransitionTrack === "c"}
+                  />
+                </div>
+
+                <TransitionPreviewPlayer
+                  title="MixMind Preview"
+                  artist="MixMind AI · Claptone-Inspired Amsterdan Set"
+                  bpmA={tracks.a.bpm}
+                  bpmB={tracks.b.bpm}
+                  bpmC={tracks.c.bpm}
+                  camelotA={tracks.a.camelot}
+                  camelotB={tracks.b.camelot}
+                  camelotC={tracks.c.camelot}
+                  compatibility={98}
+                  generatedTime="Generated in 3.2s"
+                  color="#44f3d0"
+                  audioSrc={manifest.assets.transition.url}
+                  stages={[
+                    {
+                      time: 0,
+                      label: "Track A",
+                      description: "Opening phase",
+                      color: tracks.a.accentColor,
+                    },
+                    {
+                      time: 70,
+                      label: "A → B",
+                      description: "First transition · 1:10",
+                      color: tracks.b.accentColor,
+                    },
+                    {
+                      time: 130,
+                      label: "B → C",
+                      description: "Second transition · 2:10",
+                      color: tracks.c.accentColor,
+                    },
+                  ]}
+                  onTimeUpdate={setTransitionTime}
+                  onPlayingChange={setTransitionPlaying}
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex justify-center"
+                >
+                  <FeatureBadge />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="text-center"
+                ></motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
 
         {/* Divider */}
         <motion.div
@@ -242,15 +298,19 @@ export function Demonstration() {
           transition={{ duration: 0.6 }}
           className="mx-auto max-w-4xl"
         >
-          {manifest ? <div>
-            <MixMindVideoPlayer
-              src={manifest.assets.video.url}
-              poster={manifest.assets.poster.url}
-              metadata={DEMO_METADATA}
-              onStateChange={handleVideoState}
-              onTimeUpdate={handleVideoTime}
-            />
-          </div> : <div className="aspect-video w-full rounded-xl border border-border bg-black/70" />}
+          {manifest ? (
+            <div>
+              <MixMindVideoPlayer
+                src={manifest.assets.video.url}
+                poster={manifest.assets.poster.url}
+                metadata={DEMO_METADATA}
+                onStateChange={handleVideoState}
+                onTimeUpdate={handleVideoTime}
+              />
+            </div>
+          ) : (
+            <div className="aspect-video w-full rounded-xl border border-border bg-black/70" />
+          )}
 
           <div className="mt-8">
             <AIAnalysisPanel currentTime={videoTime} isPlaying={videoPlaying} />

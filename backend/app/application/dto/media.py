@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
-REQUIRED_DEMO_ASSETS = {"trackA", "trackB", "transition", "video", "poster"}
+REQUIRED_DEMO_ASSETS = {"trackA", "trackB", "trackC", "transition", "video", "poster"}
 
 
 class StoredMedia(BaseModel):
@@ -58,10 +58,13 @@ class DemoMediaManifest(BaseModel):
     def validate_required_assets(self) -> DemoMediaManifest:
         missing = REQUIRED_DEMO_ASSETS - set(self.assets)
         if missing:
-            raise ValueError(f"missing required demo assets: {', '.join(sorted(missing))}")
+            raise ValueError(
+                f"missing required demo assets: {', '.join(sorted(missing))}"
+            )
         expected = {
             "trackA": "audio/",
             "trackB": "audio/",
+            "trackC": "audio/",
             "transition": "audio/",
             "video": "video/",
             "poster": "image/",

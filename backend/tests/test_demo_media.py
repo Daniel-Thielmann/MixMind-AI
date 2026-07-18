@@ -61,6 +61,7 @@ def valid_manifest() -> dict:
         "assets": {
             "trackA": asset("track-a-preview", "audio/mp4"),
             "trackB": asset("track-b-preview", "audio/mp4"),
+            "trackC": asset("track-c-preview", "audio/mp4"),
             "transition": asset("transition", "audio/mp4", 120),
             "video": asset("clip-720p", "video/mp4", 164),
             "poster": asset("poster", "image/webp", None),
