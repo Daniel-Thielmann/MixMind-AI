@@ -13,6 +13,7 @@ import {
   CreditCard,
   Key,
   LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { UserAvatar } from "./UserAvatar";
 import { PlanBadge } from "./PlanBadge";
@@ -36,10 +37,17 @@ export function UserDropdown() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        className="group flex items-center gap-1.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
       >
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <UserAvatar name={user.name} image={user.image} />
+        </motion.div>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className="text-text-tertiary transition-colors group-hover:text-text"
+        >
+          <ChevronDown className="h-4 w-4" />
         </motion.div>
       </button>
 

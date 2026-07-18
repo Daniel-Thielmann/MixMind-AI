@@ -19,6 +19,23 @@ interface AuthDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 12, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+};
+
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const { signInGoogle, signInGithub, signInSpotify } = useAuth();
   const [loading, setLoading] = useState<"google" | "github" | "spotify" | null>(null);
@@ -43,30 +60,28 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       {open && (
         <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogContent className="sm:max-w-sm">
-            <div className="flex flex-col items-center gap-6 py-4">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-              >
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-col items-center gap-6 py-4"
+            >
+              <motion.div variants={itemVariants}>
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-xl font-bold text-background shadow-lg shadow-primary/20">
                   M
                 </div>
               </motion.div>
 
-              <DialogHeader className="text-center">
-                <DialogTitle className="text-xl">Continue to MixMind</DialogTitle>
-                <DialogDescription className="text-balance pt-1">
-                  Use your favorite provider to continue.
-                </DialogDescription>
-              </DialogHeader>
+              <motion.div variants={itemVariants}>
+                <DialogHeader className="text-center">
+                  <DialogTitle className="text-xl">Continue to MixMind</DialogTitle>
+                  <DialogDescription className="text-balance pt-1">
+                    Use your favorite provider to continue.
+                  </DialogDescription>
+                </DialogHeader>
+              </motion.div>
 
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.15, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-                className="flex w-full flex-col gap-3"
-              >
+              <motion.div variants={itemVariants} className="flex w-full flex-col gap-3">
                 <GoogleButton
                   loading={loading === "google"}
                   onClick={() => handleSignIn("google")}
@@ -90,9 +105,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               </motion.div>
 
               <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.4 }}
+                variants={itemVariants}
                 className="text-center text-xs text-text-tertiary"
               >
                 By continuing, you agree to MixMind&apos;s{" "}
@@ -105,7 +118,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                 </a>
                 .
               </motion.p>
-            </div>
+            </motion.div>
           </DialogContent>
         </Dialog>
       )}
