@@ -52,7 +52,13 @@ class SpectrogramGenerator:
         else:
             logger.info("  Spectrogram: loading audio...")
             load_start = time.monotonic()
-            y, sr = librosa.load(audio_path, sr=None, mono=True)
+            y, sr = librosa.load(
+                audio_path,
+                sr=settings.ANALYSIS_SAMPLE_RATE,
+                mono=True,
+                duration=settings.ANALYSIS_MAX_DURATION,
+                res_type="soxr_lq",
+            )
             audio_data = y
             sample_rate = int(sr)
             log_memory("Spectrogram after load")
