@@ -26,8 +26,13 @@ const database = databaseUrl
     });
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  baseURL: process.env.BETTER_AUTH_URL ?? "http://127.0.0.1:3000",
   secret: process.env.BETTER_AUTH_SECRET,
+  trustedOrigins: [
+    "http://127.0.0.1:3000",
+    "https://*.mixmind.app",
+    process.env.BETTER_AUTH_URL,
+  ].filter(Boolean) as string[],
   database,
   user: {
     additionalFields: {
@@ -57,9 +62,6 @@ export const auth = betterAuth({
       : {}),
     ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
       ? { github: { clientId: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET } }
-      : {}),
-    ...(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET
-      ? { spotify: { clientId: process.env.SPOTIFY_CLIENT_ID, clientSecret: process.env.SPOTIFY_CLIENT_SECRET } }
       : {}),
   },
   session: {

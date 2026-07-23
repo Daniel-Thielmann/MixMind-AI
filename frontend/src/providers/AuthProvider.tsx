@@ -10,7 +10,6 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   signInGoogle: () => Promise<void>;
   signInGithub: () => Promise<void>;
-  signInSpotify: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -79,14 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw new Error(error.message ?? "GitHub sign-in failed.");
   }, []);
 
-  const signInSpotify = useCallback(async () => {
-    const { error } = await authClient.signIn.social({
-      provider: "spotify",
-      callbackURL: "/dashboard",
-    });
-    if (error) throw new Error(error.message ?? "Spotify sign-in failed.");
-  }, []);
-
   const logout = useCallback(async () => {
     await authClient.signOut();
     setUser(null);
@@ -98,7 +89,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     signInGoogle,
     signInGithub,
-    signInSpotify,
     logout,
     refreshUser,
   };

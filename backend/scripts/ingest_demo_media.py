@@ -39,8 +39,14 @@ def run(command: list[str]) -> None:
 def duration(path: Path) -> float:
     result = subprocess.run(
         [
-            "ffprobe", "-v", "error", "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1", str(path),
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(path),
         ],
         check=True,
         capture_output=True,
@@ -82,28 +88,90 @@ def parser() -> argparse.ArgumentParser:
 
 
 def encode_audio(source: Path, output: Path, start: float, length: float) -> None:
-    run([
-        "ffmpeg", "-nostdin", "-v", "error", "-ss", str(start), "-i", str(source),
-        "-t", str(length), "-vn", "-ar", "44100", "-ac", "2", "-c:a", "aac",
-        "-b:a", "192k", "-movflags", "+faststart", str(output),
-    ])
+    run(
+        [
+            "ffmpeg",
+            "-nostdin",
+            "-v",
+            "error",
+            "-ss",
+            str(start),
+            "-i",
+            str(source),
+            "-t",
+            str(length),
+            "-vn",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-movflags",
+            "+faststart",
+            str(output),
+        ]
+    )
 
 
 def encode_video(source: Path, output: Path, start: float) -> None:
-    run([
-        "ffmpeg", "-nostdin", "-v", "error", "-ss", str(start), "-i", str(source),
-        "-t", "164", "-vf", "scale=-2:min(1080\\,ih)", "-c:v", "libx264",
-        "-preset", "medium", "-crf", "26", "-maxrate", "2400k", "-bufsize", "4800k",
-        "-c:a", "aac", "-b:a", "160k",
-        "-movflags", "+faststart", str(output),
-    ])
+    run(
+        [
+            "ffmpeg",
+            "-nostdin",
+            "-v",
+            "error",
+            "-ss",
+            str(start),
+            "-i",
+            str(source),
+            "-t",
+            "164",
+            "-vf",
+            "scale=-2:min(1080\\,ih)",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "26",
+            "-maxrate",
+            "2400k",
+            "-bufsize",
+            "4800k",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "160k",
+            "-movflags",
+            "+faststart",
+            str(output),
+        ]
+    )
 
 
 def make_poster(video: Path, output: Path) -> None:
-    run([
-        "ffmpeg", "-nostdin", "-v", "error", "-ss", "1", "-i", str(video),
-        "-frames:v", "1", "-vf", "scale=1280:-2", "-quality", "80", str(output),
-    ])
+    run(
+        [
+            "ffmpeg",
+            "-nostdin",
+            "-v",
+            "error",
+            "-ss",
+            "1",
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            "-vf",
+            "scale=1280:-2",
+            "-quality",
+            "80",
+            str(output),
+        ]
+    )
 
 
 def asset(
@@ -141,16 +209,23 @@ def existing_manifest(storage: Any) -> dict[str, Any] | None:
         return None
 
 
-def upload_verified(storage: Any, local: Path, metadata: dict[str, Any], force: bool) -> None:
+def upload_verified(
+    storage: Any, local: Path, metadata: dict[str, Any], force: bool
+) -> None:
     object_path = metadata["objectPath"]
     try:
         remote = storage.download(object_path)
     except Exception:
         remote = None
-    if remote is not None and f"sha256:{hashlib.sha256(remote).hexdigest()}" == metadata["checksum"]:
+    if (
+        remote is not None
+        and f"sha256:{hashlib.sha256(remote).hexdigest()}" == metadata["checksum"]
+    ):
         return
     if remote is not None and not force:
-        raise RuntimeError(f"Remote object differs: {object_path}; use --force explicitly")
+        raise RuntimeError(
+            f"Remote object differs: {object_path}; use --force explicitly"
+        )
     options = {
         "content-type": metadata["mimeType"],
         "cache-control": "3600",
@@ -201,11 +276,15 @@ def main() -> int:
         }
         encode_audio(args.track_a, files["trackA"], 0, args.preview_seconds)
         encode_audio(args.track_b, files["trackB"], 0, args.preview_seconds)
-        encode_audio(args.transition_source, files["transition"], args.transition_start, 120)
+        encode_audio(
+            args.transition_source, files["transition"], args.transition_start, 120
+        )
         encode_video(args.video_source, files["video"], args.video_start)
         make_poster(files["video"], files["poster"])
 
-        durations = {name: duration(path) for name, path in files.items() if name != "poster"}
+        durations = {
+            name: duration(path) for name, path in files.items() if name != "poster"
+        }
         if abs(durations["transition"] - 120) > 1 or abs(durations["video"] - 164) > 1:
             raise RuntimeError("Encoded transition/video duration is outside tolerance")
 
@@ -223,7 +302,13 @@ def main() -> int:
             "video": "Dawn Patrol: Antdot B2B Maz @ Warung Beach Club [6h Long Set]",
             "poster": "Dawn Patrol demonstration poster",
         }
-        starts = {"trackA": 0.0, "trackB": 0.0, "transition": args.transition_start, "video": args.video_start, "poster": None}
+        starts = {
+            "trackA": 0.0,
+            "trackB": 0.0,
+            "transition": args.transition_start,
+            "video": args.video_start,
+            "poster": None,
+        }
         assets = {
             name: asset(
                 file,
@@ -254,8 +339,12 @@ def main() -> int:
             "checksum": sha256(manifest_file),
         }
         upload_verified(storage, manifest_file, manifest_meta, args.force)
-        total = sum(file.stat().st_size for file in files.values()) + len(manifest_bytes)
-        print(f"Ingestion validated: {len(files)} media objects + manifest, {total} bytes")
+        total = sum(file.stat().st_size for file in files.values()) + len(
+            manifest_bytes
+        )
+        print(
+            f"Ingestion validated: {len(files)} media objects + manifest, {total} bytes"
+        )
     return 0
 
 

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { GoogleButton } from "./GoogleButton";
 import { GitHubButton } from "./GitHubButton";
-import { SpotifyButton } from "./SpotifyButton";
 
 interface AuthDialogProps {
   open: boolean;
@@ -37,14 +36,13 @@ const itemVariants = {
 };
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
-  const { signInGoogle, signInGithub, signInSpotify } = useAuth();
-  const [loading, setLoading] = useState<"google" | "github" | "spotify" | null>(null);
+  const { signInGoogle, signInGithub } = useAuth();
+  const [loading, setLoading] = useState<"google" | "github" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const signInFns = {
     google: signInGoogle,
     github: signInGithub,
-    spotify: signInSpotify,
   } as const;
 
   const handleSignIn = async (provider: keyof typeof signInFns) => {
@@ -98,18 +96,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   loading={loading === "github"}
                   onClick={() => handleSignIn("github")}
                 />
-                <div className="relative my-1">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border/50" />
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-card/80 px-2 text-text-tertiary">Import your library</span>
-                  </div>
-                </div>
-                <SpotifyButton
-                  loading={loading === "spotify"}
-                  onClick={() => handleSignIn("spotify")}
-                />
+
                 {error ? (
                   <p role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-red-200">
                     {error}

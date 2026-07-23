@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 REQUIRED_DEMO_ASSETS = {"trackA", "trackB", "trackC", "transition", "video", "poster"}
 
@@ -35,7 +35,7 @@ class DemoMediaAsset(BaseModel):
     original_end: float | None = Field(default=None, alias="originalEnd", gt=0)
     processed_at: datetime = Field(alias="processedAt")
     pipeline_version: str = Field(alias="pipelineVersion", min_length=1)
-    url: HttpUrl | None = None
+    url: str | None = None
 
     @model_validator(mode="after")
     def validate_interval(self) -> DemoMediaAsset:

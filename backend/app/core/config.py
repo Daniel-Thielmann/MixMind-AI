@@ -67,6 +67,14 @@ class Settings(BaseSettings):
     INTERNAL_AUTH_SECRET: str = Field(default="", repr=False)
 
     BASE_URL: str = Field(default="http://localhost:8000")
+    FRONTEND_URL: str = Field(default="http://127.0.0.1:3000")
+
+    SPOTIFY_CLIENT_ID: str = Field(default="")
+    SPOTIFY_CLIENT_SECRET: str = Field(default="", repr=False)
+    SPOTIFY_REDIRECT_URI: str = Field(
+        default="http://127.0.0.1:8000/api/v1/integrations/spotify/callback"
+    )
+    SPOTIFY_SCOPES: str = Field(default="user-read-private user-read-email")
 
     DEMO_SIGNED_URL_TTL: int = Field(default=3600, ge=300, le=86400)
     DEMO_MANIFEST_CACHE_TTL: int = Field(default=300, ge=0, le=3500)
